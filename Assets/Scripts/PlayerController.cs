@@ -197,12 +197,16 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void LifeDepletion(float damage)
+    IEnumerator LifeDepletion(float damage)
     {
-        if (life > -1)
+        yield return null;
+        if (life >= -0.1f)
         {
+            float currentLife = life;
+            float decreasedLife;
             life -= damage;
-            UiController.instance.CalculateLife();
+            decreasedLife = life;
+            yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, decreasedLife));
             if (life <= 0)
             {
                 StartCoroutine(Death());
@@ -210,18 +214,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    Coroutine DamageCoroutine;
-    IEnumerator GettingDamagePerSecond(float damage)
+    public Coroutine DamageCoroutine;
+    public IEnumerator GettingDamagePerSecond(float damage)
     {
         while (true)
         {
             yield return null;
-            LifeDepletion(damage);
+            yield return StartCoroutine(LifeDepletion(damage));
             ArrestMovement();
             playerAnimation.Play("Hit");
             yield return CommonScript.GetDelay(1);
         }
-
     }
 
     IEnumerator Death()
@@ -236,17 +239,19 @@ public class PlayerController : MonoBehaviour
         yield return cameraController.StartCoroutine(cameraController.DeathCam(transform, deathCamPoint));
     }
 
-    private void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        if (hit.collider.CompareTag("Water"))
-        {
-            if (DamageCoroutine != null)
-            {
-                StopCoroutine(DamageCoroutine);
-            }
-                DamageCoroutine = StartCoroutine(GettingDamagePerSecond(25));
-        }
-    }
+    //private void OnControllerColliderHit(ControllerColliderHit hit)
+    //{
+    //    if (hit.collider.CompareTag("Water"))
+    //    {
+    //        if (DamageCoroutine != null)
+    //        {
+    //            Debug.Log("STOPPED");
+    //            StopCoroutine(DamageCoroutine);
+    //            FreeMovement();
+    //        }
+    //        DamageCoroutine = StartCoroutine(GettingDamagePerSecond(25));
+    //    }
+    //}
 
     #region SubFunctions
     public void ToggleControlsOn()

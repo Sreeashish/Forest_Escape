@@ -19,7 +19,7 @@ public class UiController : MonoBehaviour
     Coroutine HeartBeatRoutine;
     private void Start()
     {
-        CalculateLife();
+        CalculateLife(PlayerController.instance.life);
         RemoveDeathScreen();
         if(HeartBeatRoutine != null)
         {
@@ -47,9 +47,21 @@ public class UiController : MonoBehaviour
         CommonScript.CanvasOn(HUDCanvas);
     }
 
-    public void CalculateLife()
+    public void CalculateLife(float lifeValue)
     {
-        lifeBar.fillAmount = CommonScript.Remap(PlayerController.instance.life, 0, 100, 0, 1);
+            lifeBar.fillAmount = CommonScript.Remap(lifeValue, 0, 100, 0, 1);
+    }
+
+    public IEnumerator FillFillbar(float from, float to)
+    {
+        float fill, timeElapsed = 0, time = 0.5f;
+        while (timeElapsed < time)
+        {
+            yield return null;
+            fill = Mathf.Lerp(from, to, timeElapsed);
+            UiController.instance.CalculateLife(fill);
+            timeElapsed += Time.deltaTime;
+        }
     }
 
     public void DeathScreen()
@@ -82,7 +94,7 @@ public class UiController : MonoBehaviour
     {
         RemoveDeathScreen();
         StartCoroutine(BringCinematicFramesOut());
-        CalculateLife();
+        CalculateLife(PlayerController.instance.life);
         yield return CommonScript.GetDelay(0.8f);
         BlackScreenOut();
     }
