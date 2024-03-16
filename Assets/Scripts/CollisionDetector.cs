@@ -8,12 +8,12 @@ public class CollisionDetector : MonoBehaviour
     {
         if (collision.collider.CompareTag("Water"))
         {
-            if (PlayerController.instance.DamageCoroutine != null)
-            {
-                PlayerController.instance.StopCoroutine(PlayerController.instance.DamageCoroutine);
-                PlayerController.instance.FreeMovement();
-            }
-            PlayerController.instance.DamageCoroutine = PlayerController.instance.StartCoroutine(PlayerController.instance.GettingDamagePerSecond(25));
+            PlayerController.instance.DealDamage(25);
         }
+        //if(collision.collider.CompareTag("Lethal"))
+        //{
+        //    collision.collider.enabled = false;
+        //    PlayerController.instance.StartCoroutine(PlayerController.instance.Death());
+        //}
     }
 }

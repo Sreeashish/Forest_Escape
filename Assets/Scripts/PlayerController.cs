@@ -227,7 +227,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    IEnumerator Death()
+    public void DealDamage(float damage)
+    {
+        if (DamageCoroutine != null)
+        {
+            StopCoroutine(DamageCoroutine);
+            FreeMovement();
+        }
+        DamageCoroutine = StartCoroutine(GettingDamagePerSecond(damage));
+    }
+
+    public IEnumerator Death()
     {
         if(DamageCoroutine != null)
         {
