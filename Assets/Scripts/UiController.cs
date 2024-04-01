@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 public class UiController : MonoBehaviour
 {
-    public CanvasGroup HUDCanvas, cinematicCanvas, deathScreen, blackScreen;
-    public Image lifeBar, CinematicTopBar, CinematicBottomBar, heartImage;
+    public CanvasGroup HUDCanvas, cinematicCanvas, deathScreen, blackScreen, crosshairReticle;
+    public Image lifeBar, runicBar, CinematicTopBar, CinematicBottomBar, heartImage;
     public RectTransform respawnTextHolder;
 
     public static UiController instance;
@@ -52,15 +52,37 @@ public class UiController : MonoBehaviour
             lifeBar.fillAmount = CommonScript.Remap(lifeValue, 0, 100, 0, 1);
     }
 
-    public IEnumerator FillFillbar(float from, float to)
+    public void CalculateRunic(float runicValue)
     {
-        float fill, timeElapsed = 0, time = 0.5f;
-        while (timeElapsed < time)
+        runicBar.fillAmount = CommonScript.Remap(runicValue, 0, 3, 0, 1);
+    }
+
+    public IEnumerator FillFillbar(float from, float to, bool life, float duration = 0.7f)
+    {
+        float timeElapsed = 0;
+        while (timeElapsed < duration)
         {
             yield return null;
-            fill = Mathf.Lerp(from, to, timeElapsed);
-            UiController.instance.CalculateLife(fill);
+            float t = timeElapsed / duration;
+            float fill = Mathf.Lerp(from, to, t);
+            if (life)
+            {
+                CalculateLife(fill);
+            }
+            else
+            {
+                CalculateRunic(fill);
+            }
             timeElapsed += Time.deltaTime;
+        }
+
+        if (life)
+        {
+            CalculateLife(to);
+        }
+        else
+        {
+            CalculateRunic(to);
         }
     }
 
@@ -70,6 +92,18 @@ public class UiController : MonoBehaviour
         respawnTextHolder.DOScaleY(0, 0);
         respawnTextHolder.DOScaleY(1.5f, 1.5f).SetEase(Ease.Linear);
 
+    }
+
+    public void Crosshair(bool turn)
+    {
+        if(turn)
+        {
+            crosshairReticle.DOFade(1, 0);
+        }
+        else if (!turn)
+        {
+            crosshairReticle.DOFade(0, 0);
+        }
     }
 
     IEnumerator HeartBeat()

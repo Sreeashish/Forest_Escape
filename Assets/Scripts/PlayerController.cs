@@ -6,15 +6,19 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    #region Variables
     public enum PlayerState { Idle, Walking, Running, Jumping, Dead }
+    public enum PlayerMode { Exploring, CombatReady, MidAttack }
 
     [Header("Player Attributes")]
     public CharacterController player;
     public CinemachineFreeLook mouseControls;
-    public Transform playerBody;
+    public CombatController combatController;
+    public Transform playerBody, enemyTarget;
     public Animation playerAnimation;
     public Rigidbody playerRB;
     public PlayerState playerState;
+    public PlayerMode playerMode;
     public bool isControllable, onground, raycasting, checkCollision;
     public float walkingSpeed, sprintSpeed, turnSmoothTime = 0.1f;
     public KeyCode sprintButton;
@@ -38,7 +42,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("Camera")]
     public CameraController cameraController;
-    public Transform cameraTransform, cameraCinematicPoint, deathCamPoint;
+    public Transform cameraTransform, cameraCinematicPoint, deathCamPoint, aimCameraPoint;
+    public float mouseAimSensitivityX, mouseAimSensitivityY;
+
 
     [Header("Current Level Info")]
     public Levels currentLevel;
@@ -51,6 +57,7 @@ public class PlayerController : MonoBehaviour
         if (instance == null)
             instance = this;
     }
+    #endregion
 
     private void Start()
     {
@@ -69,6 +76,7 @@ public class PlayerController : MonoBehaviour
         PlayerMovement();
         GroundCheck();
         CheckForInteractions();
+        CombatActivations();
     }
 
     private void LateUpdate()
@@ -76,6 +84,7 @@ public class PlayerController : MonoBehaviour
         transform.position = playerBody.position;
     }
 
+    #region PlayerMovement
     void PlayerMovement()
     {
         if (isControllable)
@@ -93,34 +102,20 @@ public class PlayerController : MonoBehaviour
                 if (Input.GetKey(sprintButton))
                 {
                     player.Move(moveDirection.normalized * sprintSpeed * Time.deltaTime);
-                    MakePlayerState(PlayerState.Running);
+                    SetPlayerState(PlayerState.Running);
                 }
                 else
                 {
                     player.Move(moveDirection.normalized * walkingSpeed * Time.deltaTime);
-                    MakePlayerState(PlayerState.Walking);
+                    SetPlayerState(PlayerState.Walking);
                 }
             }
             else
             {
-                MakePlayerState(PlayerState.Idle);
-            }
-        }
-    }
-
-    void GroundCheck()
-    {
-        if (raycasting)
-        {
-            if (!OnGround())
-            {
-                onground = false;
-                playerRB.useGravity = true;
-            }
-            else
-            {
-                onground = true;
-                playerRB.useGravity = false;
+                if (playerMode != PlayerMode.MidAttack)
+                {
+                    SetPlayerState(PlayerState.Idle);
+                }
             }
         }
     }
@@ -141,33 +136,93 @@ public class PlayerController : MonoBehaviour
         playerAnimation.Play("JumpLand");
         yield return CommonScript.GetDelay(0.5f);
         transform.position = jumpToPos.position;
-        MakePlayerState(PlayerState.Idle);
+        SetPlayerState(PlayerState.Idle);
         TurnRayOn();
         ToggleControlsOn();
     }
+
+    #endregion
+
+    #region CombatBehaviour
+
+    void CombatActivations()
+    {
+        if (Input.GetMouseButton(1) && playerMode != PlayerMode.MidAttack)
+        {
+            SetPlayerMode(PlayerMode.CombatReady);
+            combatController.StartCoroutine(combatController.CrosshairRay());
+            cameraController.CombatCamera(true, aimCameraPoint);
+            UiController.instance.Crosshair(true);
+            AimCamera();
+        }
+        if (Input.GetMouseButtonUp(1))
+        {
+            SetPlayerMode(PlayerMode.Exploring);
+            cameraController.CombatCamera(false);
+            UiController.instance.Crosshair(false);
+        }
+    }
+
+    float rotationY = 0f; //this float is for the function below only
+    public void AimCamera()
+    {
+            float mouseX = Input.GetAxis("Mouse X");
+            float mouseY = Input.GetAxis("Mouse Y");
+            float rotationX = transform.localEulerAngles.y + mouseX * mouseAimSensitivityX;
+            float mouseYInput = mouseY * mouseAimSensitivityY;
+            rotationY -= mouseYInput;
+            rotationY = Mathf.Clamp(rotationY, -30f, 20f);
+
+            transform.localEulerAngles = new Vector3(0, rotationX, 0);
+            cameraTransform.localEulerAngles = new Vector3(rotationY, 0, 0);
+    }
+    #endregion
+
+    #region Sensors
+    void GroundCheck()
+    {
+        if (raycasting)
+        {
+            if (!OnGround())
+            {
+                onground = false;
+                playerRB.useGravity = true;
+            }
+            else
+            {
+                onground = true;
+                playerRB.useGravity = false;
+            }
+        }
+    }
+
+    
 
     void CheckForInteractions()
     {
         for (int i = 0; i < interactablesInCurrentLevel.Count; i++)
         {
-            if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 5)
+            if (playerMode == PlayerMode.Exploring)
             {
-                interactablesInCurrentLevel[i].DisplayMarker();
-                if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 2)
+                if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 5)
                 {
-                    if (interactablesInCurrentLevel[i].isInteractable)
+                    interactablesInCurrentLevel[i].DisplayMarker();
+                    if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 2)
                     {
-                        if (levelController.level == Levels.Level1 && !levelController.onBoardingCompleted)
+                        if (interactablesInCurrentLevel[i].isInteractable)
                         {
-                            OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
+                            if (levelController.level == Levels.Level1 && !levelController.onBoardingCompleted)
+                            {
+                                OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
+                            }
+                            StartCoroutine(ActivateInteraction(interactablesInCurrentLevel[i]));
                         }
-                        StartCoroutine(ActivateInteraction(interactablesInCurrentLevel[i]));
                     }
                 }
-            }
-            else
-            {
-                interactablesInCurrentLevel[i].TurnOffMarker();
+                else
+                {
+                    interactablesInCurrentLevel[i].TurnOffMarker();
+                }
             }
         }
     }
@@ -196,17 +251,19 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
+    #endregion
 
+    #region Life
     IEnumerator LifeDepletion(float damage)
     {
         yield return null;
         if (life >= -0.1f)
         {
             float currentLife = life;
-            float decreasedLife;
+            //float decreasedLife;
             life -= damage;
-            decreasedLife = life;
-            yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, decreasedLife));
+            //decreasedLife = life;
+            yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
             if (life <= 0)
             {
                 StartCoroutine(Death());
@@ -239,29 +296,16 @@ public class PlayerController : MonoBehaviour
 
     public IEnumerator Death()
     {
-        if(DamageCoroutine != null)
+        if (DamageCoroutine != null)
         {
             StopCoroutine(DamageCoroutine);
         }
         ToggleControlsOff();
         yield return CommonScript.GetDelay(0.2f);
-        MakePlayerState(PlayerState.Idle);
+        SetPlayerState(PlayerState.Idle);
         yield return cameraController.StartCoroutine(cameraController.DeathCam(transform, deathCamPoint));
     }
-
-    //private void OnControllerColliderHit(ControllerColliderHit hit)
-    //{
-    //    if (hit.collider.CompareTag("Water"))
-    //    {
-    //        if (DamageCoroutine != null)
-    //        {
-    //            Debug.Log("STOPPED");
-    //            StopCoroutine(DamageCoroutine);
-    //            FreeMovement();
-    //        }
-    //        DamageCoroutine = StartCoroutine(GettingDamagePerSecond(25));
-    //    }
-    //}
+    #endregion
 
     #region SubFunctions
     public void ToggleControlsOn()
@@ -272,7 +316,7 @@ public class PlayerController : MonoBehaviour
 
     public void ToggleControlsOff()
     {
-        MakePlayerState(PlayerState.Idle);
+        SetPlayerState(PlayerState.Idle);
         isControllable = false;
         mouseControls.enabled = false;
     }
@@ -315,14 +359,15 @@ public class PlayerController : MonoBehaviour
         cameraController.cameraBrain.enabled = false;
         TurnRayOff();
         ToggleControlsOff();
-        MakePlayerState(PlayerState.Idle);
+        SetPlayerState(PlayerState.Idle);
         life = 100;
         cameraController.cameraBrain.enabled = true;
         ToggleControlsOn();
         TurnRayOn();
+        StopAllCoroutines();
     }
 
-    public void MakePlayerState(PlayerState state)
+    public void SetPlayerState(PlayerState state)
     {
         switch (state)
         {
@@ -345,5 +390,21 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void SetPlayerMode(PlayerMode mode)
+    {
+        switch(mode)
+        {
+            case PlayerMode.Exploring:
+                playerMode = PlayerMode.Exploring;
+                break;
+            case PlayerMode.CombatReady:
+                playerMode = PlayerMode.CombatReady;
+                break;
+            case PlayerMode.MidAttack:
+                playerMode = PlayerMode.MidAttack;
+                playerAnimation.Play("Punch");
+                break;
+        }
+    }
     #endregion
 }

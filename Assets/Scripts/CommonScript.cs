@@ -22,6 +22,21 @@ public static class CommonScript
         }
     }
 
+    public static void Delay(float delayTime)
+    {
+        MakeDelay(delayTime);
+    }
+
+    public static IEnumerator MakeDelay(float delay)
+    {
+        float t = 0;
+        while(t < delay)
+        {
+            yield return null;
+            t += Time.deltaTime;
+        }
+    }
+
     public static void CanvasOn(CanvasGroup canvas)
     {
         canvas.alpha = 1;

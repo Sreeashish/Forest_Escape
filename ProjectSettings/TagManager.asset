@@ -9,6 +9,8 @@ TagManager:
   - Water
   - Enemy
   - Lethal
+  - FxTemporaire
+  - Runic
   layers:
   - Default
   - TransparentFX

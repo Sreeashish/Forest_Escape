@@ -14,7 +14,7 @@ public class GameController : MonoBehaviour
     }
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        //Cursor.lockState = CursorLockMode.Locked;
         Application.targetFrameRate = 60;
     }
 }
