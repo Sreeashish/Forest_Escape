@@ -19,13 +19,12 @@ public class PlayerController : MonoBehaviour
     public Rigidbody playerRB;
     public PlayerState playerState;
     public PlayerMode playerMode;
-    public bool isControllable, onground, raycasting, checkCollision;
+    public bool isControllable, onground, raycasting;
     public float walkingSpeed, sprintSpeed, turnSmoothTime = 0.1f;
     public KeyCode sprintButton;
     public KeyCode interactionButton;
     public LayerMask groundMask;
     float turnVelocity;
-    Vector3 velocity;
     public float life;
 
     public bool OnGround()
@@ -61,14 +60,13 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        checkCollision = true;
         currentLevel = levelController.level;
         interactablesInCurrentLevel = new List<Interactable>();
         interactablesInCurrentLevel = levelController.interactables;
         if (levelController.onBoardingCompleted)
-            ToggleControlsOn();
+            ToggleControlsOnorOff(true);
 
-        TurnRayOn();
+        TurnRayOnorOff(true);
     }
 
     void Update()
@@ -122,8 +120,8 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator PlayerJump(Transform jumpToPos)
     {
-        ToggleControlsOff();
-        TurnRayOff();
+        ToggleControlsOnorOff(false);
+        TurnRayOnorOff(false);
         yield return null;
         playerRB.useGravity = false;
         playerState = PlayerState.Jumping;
@@ -137,8 +135,8 @@ public class PlayerController : MonoBehaviour
         yield return CommonScript.GetDelay(0.5f);
         transform.position = jumpToPos.position;
         SetPlayerState(PlayerState.Idle);
-        TurnRayOn();
-        ToggleControlsOn();
+        TurnRayOnorOff(true);
+        ToggleControlsOnorOff(true);
     }
 
     #endregion
@@ -166,15 +164,15 @@ public class PlayerController : MonoBehaviour
     float rotationY = 0f; //this float is for the function below only
     public void AimCamera()
     {
-            float mouseX = Input.GetAxis("Mouse X");
-            float mouseY = Input.GetAxis("Mouse Y");
-            float rotationX = transform.localEulerAngles.y + mouseX * mouseAimSensitivityX;
-            float mouseYInput = mouseY * mouseAimSensitivityY;
-            rotationY -= mouseYInput;
-            rotationY = Mathf.Clamp(rotationY, -30f, 20f);
+        float mouseX = Input.GetAxis("Mouse X");
+        float mouseY = Input.GetAxis("Mouse Y");
+        float rotationX = transform.localEulerAngles.y + mouseX * mouseAimSensitivityX;
+        float mouseYInput = mouseY * mouseAimSensitivityY;
+        rotationY -= mouseYInput;
+        rotationY = Mathf.Clamp(rotationY, -30f, 20f);
 
-            transform.localEulerAngles = new Vector3(0, rotationX, 0);
-            cameraTransform.localEulerAngles = new Vector3(rotationY, 0, 0);
+        transform.localEulerAngles = new Vector3(0, rotationX, 0);
+        cameraTransform.localEulerAngles = new Vector3(rotationY, 0, 0);
     }
     #endregion
 
@@ -195,8 +193,6 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-
-    
 
     void CheckForInteractions()
     {
@@ -235,12 +231,12 @@ public class PlayerController : MonoBehaviour
             switch (interactable.interactionType)
             {
                 case Interactable.InteractionType.OpenPrison:
-                    ToggleControlsOff();
+                    ToggleControlsOnorOff(false);
                     interactable.TurnInteractionOff();
                     transform.DORotate(interactable.transform.eulerAngles, 0.5f);
                     StartCoroutine(interactable.OpenPrisonDoor());
                     yield return StartCoroutine(cameraController.StartCinematic(interactable.lookAtObject, cameraCinematicPoint));
-                    ToggleControlsOn();
+                    ToggleControlsOnorOff(true);
                     break;
                 case Interactable.InteractionType.Jump:
                     interactable.TurnInteractionOff();
@@ -260,10 +256,9 @@ public class PlayerController : MonoBehaviour
         if (life >= -0.1f)
         {
             float currentLife = life;
-            //float decreasedLife;
             life -= damage;
-            //decreasedLife = life;
             yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
+            playerAnimation.Play("Hit");
             if (life <= 0)
             {
                 StartCoroutine(Death());
@@ -272,26 +267,45 @@ public class PlayerController : MonoBehaviour
     }
 
     public Coroutine DamageCoroutine;
-    public IEnumerator GettingDamagePerSecond(float damage)
+    public IEnumerator GettingDamagePerSecond(float damage, bool continous = true)
     {
-        while (true)
+        if (continous)
         {
-            yield return null;
+            while (true)
+            {
+                yield return null;
+                yield return StartCoroutine(LifeDepletion(damage));
+                yield return CommonScript.GetDelay(1);
+            }
+        }
+        else
+        {
             yield return StartCoroutine(LifeDepletion(damage));
-            ArrestMovement();
-            playerAnimation.Play("Hit");
-            yield return CommonScript.GetDelay(1);
+            TurnMovementOnorOff(false);
+            yield return CommonScript.GetDelay(0.75f);
+            TurnMovementOnorOff(true);
         }
     }
 
-    public void DealDamage(float damage)
+    public void DealDamage(float damage, bool continousDamage)
     {
-        if (DamageCoroutine != null)
+        if (continousDamage)
         {
-            StopCoroutine(DamageCoroutine);
-            FreeMovement();
+            TurnMovementOnorOff(false);
+            if (DamageCoroutine != null)
+            {
+                StopCoroutine(DamageCoroutine);
+            }
+            DamageCoroutine = StartCoroutine(GettingDamagePerSecond(damage));
         }
-        DamageCoroutine = StartCoroutine(GettingDamagePerSecond(damage));
+        else
+        {
+            if (DamageCoroutine != null)
+            {
+                StopCoroutine(DamageCoroutine);
+            }
+            DamageCoroutine = StartCoroutine(GettingDamagePerSecond(damage, false));
+        }
     }
 
     public IEnumerator Death()
@@ -300,56 +314,53 @@ public class PlayerController : MonoBehaviour
         {
             StopCoroutine(DamageCoroutine);
         }
-        ToggleControlsOff();
+        ToggleControlsOnorOff(false);
         yield return CommonScript.GetDelay(0.2f);
-        SetPlayerState(PlayerState.Idle);
+        SetPlayerState(PlayerState.Dead);
         yield return cameraController.StartCoroutine(cameraController.DeathCam(transform, deathCamPoint));
     }
     #endregion
 
     #region SubFunctions
-    public void ToggleControlsOn()
+    public void ToggleControlsOnorOff(bool onOff)
     {
-        isControllable = true;
-        mouseControls.enabled = true;
+        if (onOff)
+        {
+            isControllable = true;
+            mouseControls.enabled = true;
+        }
+        else
+        {
+            SetPlayerState(PlayerState.Idle);
+            isControllable = false;
+            mouseControls.enabled = false;
+        }
     }
 
-    public void ToggleControlsOff()
+    public void TurnMovementOnorOff(bool onOff)
     {
-        SetPlayerState(PlayerState.Idle);
-        isControllable = false;
-        mouseControls.enabled = false;
+        if (onOff)
+            isControllable = true;
+        else
+            isControllable = false;
     }
 
-    public void ArrestMovement()
+    public void ToggleMouseControlOnorOff(bool onOff)
     {
-        isControllable = false;
+        if (onOff)
+            mouseControls.enabled = true;
+        else
+            mouseControls.enabled = false;
     }
 
-    public void FreeMovement()
+    void TurnRayOnorOff(bool onOff)
     {
-        isControllable = true;
+        if (onOff)
+            raycasting = true;
+        else
+            raycasting = false;
     }
 
-    public void ToggleMouseControlOn()
-    {
-        mouseControls.enabled = true;
-    }
-
-    public void ToggleMouseControlOff()
-    {
-        mouseControls.enabled = false;
-    }
-
-    void TurnRayOn()
-    {
-        raycasting = true;
-    }
-
-    void TurnRayOff()
-    {
-        raycasting = false;
-    }
 
     public void ResetPlayer(Vector3 position)
     {
@@ -357,13 +368,13 @@ public class PlayerController : MonoBehaviour
         transform.position = position;
         playerBody.position = position;
         cameraController.cameraBrain.enabled = false;
-        TurnRayOff();
-        ToggleControlsOff();
+        TurnRayOnorOff(false);
+        ToggleControlsOnorOff(false);
         SetPlayerState(PlayerState.Idle);
         life = 100;
         cameraController.cameraBrain.enabled = true;
-        ToggleControlsOn();
-        TurnRayOn();
+        ToggleControlsOnorOff(true);
+        TurnRayOnorOff(true);
         StopAllCoroutines();
     }
 
@@ -392,16 +403,18 @@ public class PlayerController : MonoBehaviour
 
     public void SetPlayerMode(PlayerMode mode)
     {
-        switch(mode)
+        switch (mode)
         {
             case PlayerMode.Exploring:
                 playerMode = PlayerMode.Exploring;
                 break;
             case PlayerMode.CombatReady:
                 playerMode = PlayerMode.CombatReady;
+                TurnMovementOnorOff(true);
                 break;
             case PlayerMode.MidAttack:
                 playerMode = PlayerMode.MidAttack;
+                TurnMovementOnorOff(false);
                 playerAnimation.Play("Punch");
                 break;
         }

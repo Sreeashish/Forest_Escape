@@ -8,12 +8,10 @@ public class CollisionDetector : MonoBehaviour
     {
         if (collision.collider.CompareTag("Water"))
         {
-            PlayerController.instance.DealDamage(25);
+            if (PlayerController.instance.playerState != PlayerController.PlayerState.Dead)
+            {
+                PlayerController.instance.DealDamage(25, true);
+            }
         }
-        //if(collision.collider.CompareTag("Lethal"))
-        //{
-        //    collision.collider.enabled = false;
-        //    PlayerController.instance.StartCoroutine(PlayerController.instance.Death());
-        //}
     }
 }

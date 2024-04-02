@@ -14,9 +14,9 @@ public static class CommonScript
         return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
     }
 
-    public static IEnumerator UntilNear( Transform applicant, Transform destination)
+    public static IEnumerator UntilNear( Transform applicant, Transform destination, float distance)
     {
-        while (Vector3.Distance(applicant.position, destination.position) >= 1)
+        while (Vector3.Distance(applicant.position, destination.position) >= distance)
         {
             yield return null;
         }

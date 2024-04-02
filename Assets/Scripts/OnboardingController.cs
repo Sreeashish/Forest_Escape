@@ -42,12 +42,12 @@ public class OnboardingController : MonoBehaviour
     {
         if (!PlayerController.instance.levelController.onBoardingCompleted && !phase1done)
         {
-            PlayerController.instance.ArrestMovement();
-            PlayerController.instance.ToggleMouseControlOn();
+            PlayerController.instance.TurnMovementOnorOff(false);
+            PlayerController.instance.ToggleMouseControlOnorOff(true);
             ShowOnboarding(mouseIcon, "To Look Around");
             yield return CommonScript.GetDelay(5);
             yield return StartCoroutine(HideOnboarding());
-            PlayerController.instance.ToggleControlsOn();
+            PlayerController.instance.ToggleControlsOnorOff(true);
             yield return CommonScript.GetDelay(1);
             
             ShowOnboarding(WASDIcon, "To Move Around");

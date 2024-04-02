@@ -42,7 +42,6 @@ public class CombatController : MonoBehaviour
         float currentrunic = runicAvailable;
         runicAvailable = CalculateNumberOfRunicBullets();
         UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentrunic, runicAvailable, false));
-        print(currentrunic + "  " + runicAvailable);
     }
 
     void InitializeInventoryPool()

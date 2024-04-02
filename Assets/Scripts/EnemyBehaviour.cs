@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,8 +11,8 @@ public class EnemyBehaviour : MonoBehaviour
 
     [Header("Enemy Attributes")]
     public EnemyType enemyType;
-    public Transform spawnPoint;
-    public float life, watchTime;
+    public Transform spawnPoint, forcefieldSphere;
+    public float life, watchTime, chaseDistance, attackDistance;
     public EnemyState enemyState;
     public bool hasBeenProvoked;
     public Animation enemyAnimation;
@@ -22,7 +23,7 @@ public class EnemyBehaviour : MonoBehaviour
     private void Start()
     {
         transform.position = spawnPoint.position;
-        //StartCoroutine(EnemySensor());
+        ForceFieldAttack(false);
     }
 
     public void EnemyActions(EnemyState state)
@@ -49,7 +50,12 @@ public class EnemyBehaviour : MonoBehaviour
                 chaseRoutine = StartCoroutine(ChasePlayer());
                 break;
             case EnemyState.Battle:
-
+                StopAllCoroutines();
+                if (battleRoutine != null)
+                {
+                    StopCoroutine(battleRoutine);
+                }
+                battleRoutine = StartCoroutine(Battle());
                 break;
             case EnemyState.Death:
 
@@ -61,7 +67,7 @@ public class EnemyBehaviour : MonoBehaviour
     private void Update()
     {
         distBtwEnemyAndPlayer = Vector3.Distance(transform.position, PlayerController.instance.transform.position);
-        if (distBtwEnemyAndPlayer <= 5 && !hasBeenProvoked)
+        if (!hasBeenProvoked && distBtwEnemyAndPlayer <= chaseDistance)
         {
             if (enemyState != EnemyState.Chase)
             {
@@ -70,15 +76,24 @@ public class EnemyBehaviour : MonoBehaviour
         }
         else if (enemyState != EnemyState.Patrol && !hasBeenProvoked)
         {
-            print("start");
             EnemyActions(EnemyState.Patrol);
         }
-        else if (hasBeenProvoked && enemyState != EnemyState.Chase)
+        else if (hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
         {
             EnemyActions(EnemyState.Chase);
         }
 
-        if (distBtwEnemyAndPlayer > 8 && hasBeenProvoked)
+        if(hasBeenProvoked && distBtwEnemyAndPlayer < attackDistance && enemyState != EnemyState.Battle)
+        {
+            EnemyActions(EnemyState.Battle);
+        }
+
+        if(hasBeenProvoked && distBtwEnemyAndPlayer > attackDistance && enemyState != EnemyState.Chase && enemyState == EnemyState.Battle)
+        {
+            EnemyActions(EnemyState.Chase);
+        }
+
+        if (hasBeenProvoked && distBtwEnemyAndPlayer > chaseDistance)
         {
             GetDistracted();
         }
@@ -95,15 +110,16 @@ public class EnemyBehaviour : MonoBehaviour
     public IEnumerator Patrol()
     {
         enemyState = EnemyState.Patrol;
+        ForceFieldAttack(false);
         while (true)
         {
             yield return null;
             int randomIndex = Random.Range(0, patrolPoints.Count);
             Transform randomPoint = patrolPoints[randomIndex];
-
+            EnableAgent();
             enemyAgent.SetDestination(randomPoint.position);
             enemyAnimation.Play("Walking");
-            yield return CommonScript.UntilNear(enemyAgent.transform, randomPoint);
+            yield return CommonScript.UntilNear(enemyAgent.transform, randomPoint, 2);
             enemyAgent.enabled = false;
             transform.rotation = Quaternion.RotateTowards(transform.rotation, randomPoint.rotation, 360);
             enemyAnimation.Play("Watching");
@@ -116,20 +132,49 @@ public class EnemyBehaviour : MonoBehaviour
     public IEnumerator ChasePlayer()
     {
         enemyState = EnemyState.Chase;
+        ForceFieldAttack(false);
         while (hasBeenProvoked)
         {
             yield return null;
             enemyAnimation.Play("Running");
+            EnableAgent();
             enemyAgent.SetDestination(PlayerController.instance.enemyTarget.position);
         }
     }
 
     public Coroutine battleRoutine;
-    //public IEnumerator Battle()
-    //{
-    //    enemyState = EnemyState.Battle;
+    public IEnumerator Battle()
+    {
+        enemyState = EnemyState.Battle;
+        while (enemyState == EnemyState.Battle)
+        {
+            yield return null;
+            enemyAnimation.Play("Taunting");
+            ForceFieldAttack(true);
+            yield return CommonScript.GetDelay(2f);
+            ForceFieldAttack(false);
+        }
+    }
 
-    //}
+    void ForceFieldAttack(bool attack)
+    {
+        if(attack)
+        {
+            forcefieldParticle.Play();
+            forcefieldSphere.gameObject.SetActive(true);
+            forcefieldSphere.DOScale(5, 0.5f);
+            if (PlayerController.instance.playerState != PlayerController.PlayerState.Dead)
+            {
+                PlayerController.instance.DealDamage(15, false);
+            }
+        }
+        else
+        {
+            forcefieldParticle.Stop();
+            forcefieldSphere.DOScale(1, 0);
+            forcefieldSphere.gameObject.SetActive(false);
+        }
+    }
 
     void GetDistracted()
     {
@@ -144,10 +189,6 @@ public class EnemyBehaviour : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.CompareTag("Ground"))
-        {
-            Debug.Log("ON GROUND");
-        }
         if (collision.collider.CompareTag("Runic"))
         {
             Debug.Log("GOT HIT");
@@ -157,5 +198,11 @@ public class EnemyBehaviour : MonoBehaviour
     public void ResetEnemey()
     {
         StopAllCoroutines();
+    }
+
+    void EnableAgent()
+    {
+        if (!enemyAgent.enabled)
+            enemyAgent.enabled = true;
     }
 }
