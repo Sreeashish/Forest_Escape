@@ -75,6 +75,8 @@ public class CameraController : MonoBehaviour
         UiController.instance.DeathScreen();
         MoveandRotateCamera(camPosition, 3);
         StartCoroutine(ChangeFOV(50, 70, 1f));
+        yield return CommonScript.GetDelay(2.5f);
+        GameController.instance.OnPlayerDead();
     }
 
     IEnumerator ChangeFOV(float from, float to, float time)

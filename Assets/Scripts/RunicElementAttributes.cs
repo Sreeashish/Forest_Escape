@@ -5,12 +5,12 @@ using UnityEngine;
 
 public class RunicElementAttributes : MonoBehaviour
 {
-    [SerializeField]
-    float speed;
+    public float speed, damage;
     public ParticleSystem trial, collissionParticle;
 
-    public IEnumerator RunicTrajectory(Transform from, Vector3 to)
+    public IEnumerator RunicTrajectory(Transform from, Vector3 to, float damageAllocated)
     {
+        damage = damageAllocated;
         transform.position = from.position;
         PlayParticles("Trial");
         while (Vector3.Distance(transform.position, to) >= 0.2f)

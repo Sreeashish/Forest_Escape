@@ -145,7 +145,22 @@ public class PlayerController : MonoBehaviour
 
     void CombatActivations()
     {
-        if (Input.GetMouseButton(1) && playerMode != PlayerMode.MidAttack)
+        if (isControllable)
+        {
+            if (Input.GetMouseButton(1) && playerMode != PlayerMode.MidAttack)
+            {
+                EnableCombatMode(true);
+            }
+            if (Input.GetMouseButtonUp(1))
+            {
+                EnableCombatMode(false);
+            }
+        }
+    }
+
+    void EnableCombatMode(bool enable)
+    {
+        if(enable)
         {
             SetPlayerMode(PlayerMode.CombatReady);
             combatController.StartCoroutine(combatController.CrosshairRay());
@@ -153,7 +168,7 @@ public class PlayerController : MonoBehaviour
             UiController.instance.Crosshair(true);
             AimCamera();
         }
-        if (Input.GetMouseButtonUp(1))
+        else
         {
             SetPlayerMode(PlayerMode.Exploring);
             cameraController.CombatCamera(false);
@@ -371,6 +386,7 @@ public class PlayerController : MonoBehaviour
         TurnRayOnorOff(false);
         ToggleControlsOnorOff(false);
         SetPlayerState(PlayerState.Idle);
+        EnableCombatMode(false);
         life = 100;
         cameraController.cameraBrain.enabled = true;
         ToggleControlsOnorOff(true);

@@ -7,13 +7,13 @@ using UnityEngine.AI;
 public class EnemyBehaviour : MonoBehaviour
 {
     public enum EnemyType { Shroom }
-    public enum EnemyState { Idle, Patrol, Chase, Battle, Death }
+    public enum EnemyState { Idle, Patrol, Chase, Battle, GettingHit, Death }
 
     [Header("Enemy Attributes")]
     public EnemyType enemyType;
     public Transform spawnPoint, forcefieldSphere;
     public float life, watchTime, chaseDistance, attackDistance;
-    public EnemyState enemyState;
+    public EnemyState enemyState, previousState;
     public bool hasBeenProvoked;
     public Animation enemyAnimation;
     public NavMeshAgent enemyAgent;
@@ -26,13 +26,14 @@ public class EnemyBehaviour : MonoBehaviour
         ForceFieldAttack(false);
     }
 
-    public void EnemyActions(EnemyState state)
+    public void EnemyActions(EnemyState state, float damageIfAny = 0)
     {
         switch (state)
         {
             case EnemyState.Idle:
 
                 break;
+
             case EnemyState.Patrol:
                 StopAllCoroutines();
                 if (patrolRoutine != null)
@@ -41,6 +42,7 @@ public class EnemyBehaviour : MonoBehaviour
                 }
                 patrolRoutine = StartCoroutine(Patrol());
                 break;
+
             case EnemyState.Chase:
                 StopAllCoroutines();
                 if (chaseRoutine != null)
@@ -49,6 +51,7 @@ public class EnemyBehaviour : MonoBehaviour
                 }
                 chaseRoutine = StartCoroutine(ChasePlayer());
                 break;
+
             case EnemyState.Battle:
                 StopAllCoroutines();
                 if (battleRoutine != null)
@@ -57,8 +60,15 @@ public class EnemyBehaviour : MonoBehaviour
                 }
                 battleRoutine = StartCoroutine(Battle());
                 break;
-            case EnemyState.Death:
 
+            case EnemyState.GettingHit:
+                StopAllCoroutines();
+                LifeDepletion(damageIfAny);
+                break;
+
+            case EnemyState.Death:
+                StopAllCoroutines();
+                Death();
                 break;
         }
     }
@@ -66,36 +76,39 @@ public class EnemyBehaviour : MonoBehaviour
     float distBtwEnemyAndPlayer;
     private void Update()
     {
-        distBtwEnemyAndPlayer = Vector3.Distance(transform.position, PlayerController.instance.transform.position);
-        if (!hasBeenProvoked && distBtwEnemyAndPlayer <= chaseDistance)
+        if (enemyState != EnemyState.GettingHit)
         {
-            if (enemyState != EnemyState.Chase)
+            distBtwEnemyAndPlayer = Vector3.Distance(transform.position, PlayerController.instance.transform.position);
+            if (!hasBeenProvoked && distBtwEnemyAndPlayer <= chaseDistance)
             {
-                hasBeenProvoked = true;
+                if (enemyState != EnemyState.Chase)
+                {
+                    hasBeenProvoked = true;
+                }
             }
-        }
-        else if (enemyState != EnemyState.Patrol && !hasBeenProvoked)
-        {
-            EnemyActions(EnemyState.Patrol);
-        }
-        else if (hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
-        {
-            EnemyActions(EnemyState.Chase);
-        }
+            else if (enemyState != EnemyState.Patrol && !hasBeenProvoked)
+            {
+                EnemyActions(EnemyState.Patrol);
+            }
+            else if (hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
+            {
+                EnemyActions(EnemyState.Chase);
+            }
 
-        if(hasBeenProvoked && distBtwEnemyAndPlayer < attackDistance && enemyState != EnemyState.Battle)
-        {
-            EnemyActions(EnemyState.Battle);
-        }
+            if (hasBeenProvoked && distBtwEnemyAndPlayer < attackDistance && enemyState != EnemyState.Battle)
+            {
+                EnemyActions(EnemyState.Battle);
+            }
 
-        if(hasBeenProvoked && distBtwEnemyAndPlayer > attackDistance && enemyState != EnemyState.Chase && enemyState == EnemyState.Battle)
-        {
-            EnemyActions(EnemyState.Chase);
-        }
+            if (hasBeenProvoked && distBtwEnemyAndPlayer > attackDistance && enemyState != EnemyState.Chase && enemyState == EnemyState.Battle)
+            {
+                EnemyActions(EnemyState.Chase);
+            }
 
-        if (hasBeenProvoked && distBtwEnemyAndPlayer > chaseDistance)
-        {
-            GetDistracted();
+            if (hasBeenProvoked && distBtwEnemyAndPlayer > chaseDistance)
+            {
+                GetDistracted();
+            }
         }
     }
 
@@ -187,11 +200,39 @@ public class EnemyBehaviour : MonoBehaviour
         patrolRoutine = StartCoroutine(Patrol());
     }
 
+    void GetHit(float damage)
+    {
+        previousState = enemyState;
+        EnemyActions(EnemyState.GettingHit, damage);
+    }
+
+    void LifeDepletion(float damage)
+    {
+        life -= damage;
+        enemyAnimation.Play("Hit");
+        if (life <= 0)
+        {
+            EnemyActions(EnemyState.Death);
+        }
+        else
+        {
+            EnemyActions(previousState);
+        }
+    }
+
+    void Death()
+    {
+        enemyState = EnemyState.Death;
+        enemyAnimation.Play("Death");
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.collider.CompareTag("Runic"))
         {
-            Debug.Log("GOT HIT");
+            RunicElementAttributes runic;
+            runic = collision.gameObject.GetComponent<RunicElementAttributes>();
+            GetHit(runic.damage);
         }
     }
 

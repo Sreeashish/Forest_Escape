@@ -5,6 +5,8 @@ using UnityEngine;
 public class CombatController : MonoBehaviour
 {
     Camera cam;
+    public float lightAttackDamage, heavyAttackDamage;
+    public float lightAttackRechargeTime, heavyAttackRechargeTime;
     public RectTransform crosshairRect;
     public RunicElementAttributes runicElement;
     public List<Inventory> runicBullets;
@@ -87,11 +89,11 @@ public class CombatController : MonoBehaviour
                 if (!bullet.isFired)
                 {
                     bullet.runics.gameObject.SetActive(true);
-                    bullet.runics.StartCoroutine(bullet.runics.RunicTrajectory(triggerPoint, fixedHitPoint));
+                    bullet.runics.StartCoroutine(bullet.runics.RunicTrajectory(triggerPoint, fixedHitPoint, lightAttackDamage));
                     bullet.isFired = true;
                     GetRunicBulletCount();
                     yield return CommonScript.GetDelay(1);
-                    StartCoroutine(bullet.RechargeRunic(5));
+                    StartCoroutine(bullet.RechargeRunic(lightAttackRechargeTime));
                     PlayerController.instance.SetPlayerMode(PlayerController.PlayerMode.CombatReady);
                     break;
                 }
@@ -114,6 +116,7 @@ public class Inventory
             yield return null;
             t += Time.deltaTime;
         }
+        runics.damage = 0;
         isFired = false;
         CombatController.instance.GetRunicBulletCount();
     }

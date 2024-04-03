@@ -21,7 +21,7 @@ public class UiController : MonoBehaviour
     {
         CalculateLife(PlayerController.instance.life);
         RemoveDeathScreen();
-        if(HeartBeatRoutine != null)
+        if (HeartBeatRoutine != null)
         {
             StopCoroutine(HeartBeatRoutine);
         }
@@ -49,7 +49,7 @@ public class UiController : MonoBehaviour
 
     public void CalculateLife(float lifeValue)
     {
-            lifeBar.fillAmount = CommonScript.Remap(lifeValue, 0, 100, 0, 1);
+        lifeBar.fillAmount = CommonScript.Remap(lifeValue, 0, 100, 0, 1);
     }
 
     public void CalculateRunic(float runicValue)
@@ -91,12 +91,11 @@ public class UiController : MonoBehaviour
         deathScreen.DOFade(1, 1.5f);
         respawnTextHolder.DOScaleY(0, 0);
         respawnTextHolder.DOScaleY(1.5f, 1.5f).SetEase(Ease.Linear);
-
     }
 
     public void Crosshair(bool turn)
     {
-        if(turn)
+        if (turn)
         {
             crosshairReticle.DOFade(1, 0);
         }
@@ -121,15 +120,15 @@ public class UiController : MonoBehaviour
 
     public void RemoveDeathScreen()
     {
-        deathScreen.DOFade(0, 0);
+        CommonScript.CanvasOff(deathScreen);
     }
 
     public IEnumerator ResetUI()
     {
-        RemoveDeathScreen();
         StartCoroutine(BringCinematicFramesOut());
         CalculateLife(PlayerController.instance.life);
         yield return CommonScript.GetDelay(0.8f);
+        RemoveDeathScreen();
         BlackScreenOut();
     }
 

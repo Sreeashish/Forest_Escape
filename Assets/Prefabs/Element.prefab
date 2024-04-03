@@ -33736,6 +33736,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 20
+  damage: 0
   trial: {fileID: 6861835770515714872}
   collissionParticle: {fileID: 8272074797483569500}
 --- !u!1 &9065500695937071852

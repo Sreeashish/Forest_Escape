@@ -327,6 +327,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 234d477a6c2c8ab439de80f81be7a6fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  respawnButton: 32
+  isPlayerDead: 0
 --- !u!4 &39902813
 Transform:
   m_ObjectHideFlags: 0
@@ -22358,7 +22360,6 @@ MonoBehaviour:
   water: {fileID: 6889704020789444407}
   onBoardingCompleted: 1
   respawnPoint: {fileID: 1874590679}
-  respawnButton: 32
 --- !u!4 &1103215066
 Transform:
   m_ObjectHideFlags: 0
@@ -40015,6 +40016,7 @@ MonoBehaviour:
   chaseDistance: 20
   attackDistance: 2
   enemyState: 0
+  previousState: 0
   hasBeenProvoked: 0
   enemyAnimation: {fileID: 875073071521336410}
   enemyAgent: {fileID: 875073071521336408}
@@ -41110,6 +41112,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90fef6f736ae7d04f9b93eb430920c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lightAttackDamage: 20
+  heavyAttackDamage: 35
+  lightAttackRechargeTime: 8
+  heavyAttackRechargeTime: 15
   crosshairRect: {fileID: 2076297739}
   runicElement: {fileID: 9067284757011117214, guid: 2ae42623263b85c4dae9d303c1383b48, type: 3}
   runicBullets: []

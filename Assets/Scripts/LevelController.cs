@@ -11,7 +11,6 @@ public class LevelController : MonoBehaviour
     public MeshRenderer water;
     public bool onBoardingCompleted;
     public Transform respawnPoint;
-    public KeyCode respawnButton;
 
     Vector2 waterMoveFrom = new Vector2(0, 0.5f);
     Vector2 waterMoveTo = new Vector2(0, 0);
@@ -34,7 +33,6 @@ public class LevelController : MonoBehaviour
     private void Update()
     {
         InteractableMarkerLookAts();
-        PlayerRespawn();
     }
     IEnumerator WaterAnimation()
     {
@@ -56,7 +54,7 @@ public class LevelController : MonoBehaviour
     {
         for (int i = 0; i < interactables.Count; i++)
         {
-            interactables[i].isInteractable = true;
+            interactables[i].TurnInteractionOn();
         }
     }
 
@@ -64,7 +62,7 @@ public class LevelController : MonoBehaviour
     {
         for (int i = 0; i < interactables.Count; i++)
         {
-            interactables[i].isInteractable = false;
+            interactables[i].TurnInteractionOff();
         }
     }
 
@@ -74,18 +72,6 @@ public class LevelController : MonoBehaviour
         {
             if (interactables[i].marker != null)
                 interactables[i].marker.transform.LookAt(PlayerController.instance.cameraTransform);
-        }
-    }
-
-    void PlayerRespawn()
-    {
-        if (PlayerController.instance.playerState == PlayerController.PlayerState.Dead)
-        {
-            if (Input.GetKeyDown(respawnButton))
-            {
-                PlayerController.instance.ResetPlayer(respawnPoint.position);
-                UiController.instance.StartCoroutine(UiController.instance.ResetUI());
-            }
         }
     }
 }
