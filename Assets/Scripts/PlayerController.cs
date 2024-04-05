@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Player Attributes")]
     public CharacterController player;
-    public CinemachineFreeLook mouseControls;
+    public CinemachineFreeLook freeLookCamera;
     public CombatController combatController;
     public Transform playerBody, enemyTarget;
     public Animation playerAnimation;
@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     public KeyCode sprintButton;
     public KeyCode interactionButton;
     public LayerMask groundMask;
+    public ParticleSystem bloodParticle, splashParticle;
     float turnVelocity;
     public float life;
 
@@ -145,7 +146,7 @@ public class PlayerController : MonoBehaviour
 
     void CombatActivations()
     {
-        if (isControllable)
+        if (levelController.onBoardingCompleted)
         {
             if (Input.GetMouseButton(1) && playerMode != PlayerMode.MidAttack)
             {
@@ -160,7 +161,7 @@ public class PlayerController : MonoBehaviour
 
     void EnableCombatMode(bool enable)
     {
-        if(enable)
+        if (enable)
         {
             SetPlayerMode(PlayerMode.CombatReady);
             combatController.StartCoroutine(combatController.CrosshairRay());
@@ -217,11 +218,13 @@ public class PlayerController : MonoBehaviour
             {
                 if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 5)
                 {
-                    interactablesInCurrentLevel[i].DisplayMarker();
-                    if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 2)
+                    interactablesInCurrentLevel[i].DisplayMarker(true);
+                    interactablesInCurrentLevel[i].MarkerState(false);
+                    if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 1.5f)
                     {
                         if (interactablesInCurrentLevel[i].isInteractable)
                         {
+                            interactablesInCurrentLevel[i].MarkerState(true);
                             if (levelController.level == Levels.Level1 && !levelController.onBoardingCompleted)
                             {
                                 OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
@@ -232,7 +235,7 @@ public class PlayerController : MonoBehaviour
                 }
                 else
                 {
-                    interactablesInCurrentLevel[i].TurnOffMarker();
+                    interactablesInCurrentLevel[i].DisplayMarker(false);
                 }
             }
         }
@@ -247,16 +250,16 @@ public class PlayerController : MonoBehaviour
             {
                 case Interactable.InteractionType.OpenPrison:
                     ToggleControlsOnorOff(false);
-                    interactable.TurnInteractionOff();
+                    interactable.TurnInteraction(false);
                     transform.DORotate(interactable.transform.eulerAngles, 0.5f);
                     StartCoroutine(interactable.OpenPrisonDoor());
                     yield return StartCoroutine(cameraController.StartCinematic(interactable.lookAtObject, cameraCinematicPoint));
                     ToggleControlsOnorOff(true);
                     break;
                 case Interactable.InteractionType.Jump:
-                    interactable.TurnInteractionOff();
+                    interactable.TurnInteraction(false);
                     StartCoroutine(PlayerJump(interactable.interactionItem));
-                    interactable.TurnInteractionOn();
+                    interactable.TurnInteraction(true);
                     interactable.CreateMarker();
                     break;
             }
@@ -273,6 +276,7 @@ public class PlayerController : MonoBehaviour
             float currentLife = life;
             life -= damage;
             yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
+            bloodParticle.Play();
             playerAnimation.Play("Hit");
             if (life <= 0)
             {
@@ -342,13 +346,13 @@ public class PlayerController : MonoBehaviour
         if (onOff)
         {
             isControllable = true;
-            mouseControls.enabled = true;
+            freeLookCamera.enabled = true;
         }
         else
         {
             SetPlayerState(PlayerState.Idle);
             isControllable = false;
-            mouseControls.enabled = false;
+            freeLookCamera.enabled = false;
         }
     }
 
@@ -363,9 +367,9 @@ public class PlayerController : MonoBehaviour
     public void ToggleMouseControlOnorOff(bool onOff)
     {
         if (onOff)
-            mouseControls.enabled = true;
+            freeLookCamera.enabled = true;
         else
-            mouseControls.enabled = false;
+            freeLookCamera.enabled = false;
     }
 
     void TurnRayOnorOff(bool onOff)

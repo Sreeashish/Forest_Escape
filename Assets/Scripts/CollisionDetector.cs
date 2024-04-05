@@ -10,6 +10,7 @@ public class CollisionDetector : MonoBehaviour
         {
             if (PlayerController.instance.playerState != PlayerController.PlayerState.Dead)
             {
+                PlayerController.instance.splashParticle.Play();
                 PlayerController.instance.DealDamage(25, true);
             }
         }

@@ -17,7 +17,7 @@ public class EnemyBehaviour : MonoBehaviour
     public bool hasBeenProvoked;
     public Animation enemyAnimation;
     public NavMeshAgent enemyAgent;
-    public ParticleSystem forcefieldParticle;
+    public ParticleSystem forcefieldParticle, bloodParticle, deathParticle;
     public List<Transform> patrolPoints = new();
 
     private void Start()
@@ -68,7 +68,7 @@ public class EnemyBehaviour : MonoBehaviour
 
             case EnemyState.Death:
                 StopAllCoroutines();
-                Death();
+                StartCoroutine(Death());
                 break;
         }
     }
@@ -76,7 +76,7 @@ public class EnemyBehaviour : MonoBehaviour
     float distBtwEnemyAndPlayer;
     private void Update()
     {
-        if (enemyState != EnemyState.GettingHit)
+        if (enemyState != EnemyState.Death && enemyState != EnemyState.GettingHit)
         {
             distBtwEnemyAndPlayer = Vector3.Distance(transform.position, PlayerController.instance.transform.position);
             if (!hasBeenProvoked && distBtwEnemyAndPlayer <= chaseDistance)
@@ -171,7 +171,7 @@ public class EnemyBehaviour : MonoBehaviour
 
     void ForceFieldAttack(bool attack)
     {
-        if(attack)
+        if (attack)
         {
             forcefieldParticle.Play();
             forcefieldSphere.gameObject.SetActive(true);
@@ -200,7 +200,7 @@ public class EnemyBehaviour : MonoBehaviour
         patrolRoutine = StartCoroutine(Patrol());
     }
 
-    void GetHit(float damage)
+    public void GetHit(float damage)
     {
         previousState = enemyState;
         EnemyActions(EnemyState.GettingHit, damage);
@@ -209,6 +209,7 @@ public class EnemyBehaviour : MonoBehaviour
     void LifeDepletion(float damage)
     {
         life -= damage;
+        bloodParticle.Play();
         enemyAnimation.Play("Hit");
         if (life <= 0)
         {
@@ -220,21 +221,26 @@ public class EnemyBehaviour : MonoBehaviour
         }
     }
 
-    void Death()
+    IEnumerator Death()
     {
         enemyState = EnemyState.Death;
         enemyAnimation.Play("Death");
+        yield return transform.DOScale(2, 1.5f);
+        yield return CommonScript.GetDelay(1.5f);
+        deathParticle.Play();
+        yield return CommonScript.GetDelay(1.5f);
+        gameObject.SetActive(false);
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.collider.CompareTag("Runic"))
-        {
-            RunicElementAttributes runic;
-            runic = collision.gameObject.GetComponent<RunicElementAttributes>();
-            GetHit(runic.damage);
-        }
-    }
+    //private void OnCollisionEnter(Collision collision)
+    //{
+    //    if (collision.collider.CompareTag("Runic"))
+    //    {
+    //        RunicElementAttributes runic;
+    //        runic = collision.gameObject.GetComponent<RunicElementAttributes>();
+    //        GetHit(runic.damage);
+    //    }
+    //}
 
     public void ResetEnemey()
     {

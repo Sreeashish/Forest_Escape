@@ -2,6 +2,7 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum Levels { Level1, Level2, Level3, Level4 };
 public class LevelController : MonoBehaviour
@@ -10,7 +11,8 @@ public class LevelController : MonoBehaviour
     public List<Interactable> interactables;
     public MeshRenderer water;
     public bool onBoardingCompleted;
-    public Transform respawnPoint;
+    public Transform respawnPoint, markerUIParent;
+    public GameObject interactionMarkerPrefab;
 
     Vector2 waterMoveFrom = new Vector2(0, 0.5f);
     Vector2 waterMoveTo = new Vector2(0, 0);
@@ -28,11 +30,12 @@ public class LevelController : MonoBehaviour
             StartCoroutine(WaterAnimation());
             OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
         }
+        SpawnInteractionMarkers();
     }
 
     private void Update()
     {
-        InteractableMarkerLookAts();
+        UpdateMarkerPositions();
     }
     IEnumerator WaterAnimation()
     {
@@ -54,7 +57,7 @@ public class LevelController : MonoBehaviour
     {
         for (int i = 0; i < interactables.Count; i++)
         {
-            interactables[i].TurnInteractionOn();
+            interactables[i].TurnInteraction(true);
         }
     }
 
@@ -62,16 +65,27 @@ public class LevelController : MonoBehaviour
     {
         for (int i = 0; i < interactables.Count; i++)
         {
-            interactables[i].TurnInteractionOff();
+            interactables[i].TurnInteraction(false);
         }
     }
 
-    void InteractableMarkerLookAts()
+    void SpawnInteractionMarkers()
     {
         for (int i = 0; i < interactables.Count; i++)
         {
-            if (interactables[i].marker != null)
-                interactables[i].marker.transform.LookAt(PlayerController.instance.cameraTransform);
+            GameObject marker = Instantiate(interactionMarkerPrefab, markerUIParent);
+            interactables[i].interactionMarker = marker.GetComponent<RectTransform>();
+            interactables[i].marker = marker.GetComponent<Image>();
+            interactables[i].markerCanvas = marker.GetComponent<CanvasGroup>();
+            interactables[i].MarkerState(false);
+        }
+    }
+
+    void UpdateMarkerPositions()
+    {
+        for (int i = 0; i < interactables.Count; i++)
+        {
+            interactables[i].interactionMarker.position = Camera.main.WorldToScreenPoint(interactables[i].transform.position);
         }
     }
 }

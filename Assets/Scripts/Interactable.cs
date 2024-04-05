@@ -1,6 +1,5 @@
 using DG.Tweening;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +14,7 @@ public class Interactable : MonoBehaviour
     public Light interactionLight;
     public Image marker;
     public CanvasGroup markerCanvas;
+    public RectTransform interactionMarker;
     public IEnumerator OpenPrisonDoor()
     {
         Collider collider = interactionItem.GetComponent<Collider>();
@@ -24,7 +24,7 @@ public class Interactable : MonoBehaviour
         yield return CommonScript.GetDelay(8);
         interactionItem.transform.DOLocalMoveY(6.41f, 2).SetEase(Ease.InOutBounce);
         yield return CommonScript.GetDelay(2);
-        TurnInteractionOn();
+        TurnInteraction(true);
         interactionLight.enabled = true;
         CreateMarker();
         collider.enabled = true;
@@ -34,35 +34,50 @@ public class Interactable : MonoBehaviour
         }
     }
 
-    public void TurnInteractionOn()
+    public void TurnInteraction(bool on)
     {
-        isInteractable = true;
+        if (on)
+            isInteractable = true;
+        else
+            isInteractable = false;
     }
 
-    public void TurnInteractionOff()
+    public void MarkerState(bool eKey)
     {
-        isInteractable = false;
-    }
-
-    public void DisplayMarker()
-    {
-        if (markerCanvas != null)
+        if(!eKey)
         {
-            CommonScript.CanvasOn(markerCanvas);
+            interactionMarker.DOScale(0.5f,0);
+            marker.sprite = UiController.instance.markerIcon;
+        }
+        else
+        {
+            interactionMarker.DOScale(2, 0);
+            marker.sprite = UiController.instance.eKey;
         }
     }
 
-    public void TurnOffMarker()
+    public void DisplayMarker(bool on)
     {
-        if (markerCanvas != null)
+        if (on)
         {
-            CommonScript.CanvasOff(markerCanvas);
+            if (markerCanvas != null)
+            {
+                CommonScript.CanvasOn(markerCanvas);
+            }
+        }
+        else
+        {
+            if (markerCanvas != null)
+            {
+                CommonScript.CanvasOff(markerCanvas);
+            }
         }
     }
 
     public void DestroyMarker()
     {
         marker.gameObject.SetActive(false);
+        MarkerState(false);
     }
 
     public void CreateMarker()

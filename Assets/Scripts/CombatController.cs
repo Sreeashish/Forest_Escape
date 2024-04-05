@@ -92,7 +92,7 @@ public class CombatController : MonoBehaviour
                     bullet.runics.StartCoroutine(bullet.runics.RunicTrajectory(triggerPoint, fixedHitPoint, lightAttackDamage));
                     bullet.isFired = true;
                     GetRunicBulletCount();
-                    yield return CommonScript.GetDelay(1);
+                    yield return CommonScript.GetDelay(0.2f);
                     StartCoroutine(bullet.RechargeRunic(lightAttackRechargeTime));
                     PlayerController.instance.SetPlayerMode(PlayerController.PlayerMode.CombatReady);
                     break;

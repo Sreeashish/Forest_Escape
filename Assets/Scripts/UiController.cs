@@ -5,9 +5,15 @@ using UnityEngine.UI;
 
 public class UiController : MonoBehaviour
 {
-    public CanvasGroup HUDCanvas, cinematicCanvas, deathScreen, blackScreen, crosshairReticle;
+    [Header("UI ELEMENTS & ATTRIBUTES")]
+    public CanvasGroup HUDCanvas;
+    public CanvasGroup cinematicCanvas, deathScreen, blackScreen, crosshairReticle;
     public Image lifeBar, runicBar, CinematicTopBar, CinematicBottomBar, heartImage;
     public RectTransform respawnTextHolder;
+
+    [Header("SPRITES")]
+    public Sprite eKey;
+    public Sprite markerIcon;
 
     public static UiController instance;
     private void Awake()
