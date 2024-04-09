@@ -15,6 +15,9 @@ public class UiController : MonoBehaviour
     public Sprite eKey;
     public Sprite markerIcon;
 
+    [Header("WORLDSPACE UI ELEMENTS")]
+    public Transform worldspaceUIElementsHolder;
+
     public static UiController instance;
     private void Awake()
     {

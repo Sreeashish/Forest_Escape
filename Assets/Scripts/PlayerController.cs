@@ -24,9 +24,10 @@ public class PlayerController : MonoBehaviour
     public KeyCode sprintButton;
     public KeyCode interactionButton;
     public LayerMask groundMask;
-    public ParticleSystem bloodParticle, splashParticle;
+    public ParticleSystem bloodParticle, splashParticle, sparks;
+    public float life, maxLife, regenerationStartTime;
     float turnVelocity;
-    public float life;
+
 
     public bool OnGround()
     {
@@ -61,6 +62,7 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
+        life = maxLife;
         currentLevel = levelController.level;
         interactablesInCurrentLevel = new List<Interactable>();
         interactablesInCurrentLevel = levelController.interactables;
@@ -76,6 +78,7 @@ public class PlayerController : MonoBehaviour
         GroundCheck();
         CheckForInteractions();
         CombatActivations();
+        LifeRegeneration();
     }
 
     private void LateUpdate()
@@ -220,9 +223,9 @@ public class PlayerController : MonoBehaviour
                 {
                     interactablesInCurrentLevel[i].DisplayMarker(true);
                     interactablesInCurrentLevel[i].MarkerState(false);
-                    if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 1.5f)
+                    if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 2f)
                     {
-                        if (interactablesInCurrentLevel[i].isInteractable)
+                        if (interactablesInCurrentLevel[i].isInteractable && !interactablesInCurrentLevel[i].oneTimeInterationOver)
                         {
                             interactablesInCurrentLevel[i].MarkerState(true);
                             if (levelController.level == Levels.Level1 && !levelController.onBoardingCompleted)
@@ -262,12 +265,62 @@ public class PlayerController : MonoBehaviour
                     interactable.TurnInteraction(true);
                     interactable.CreateMarker();
                     break;
+                case Interactable.InteractionType.HealthChest:
+                    ToggleControlsOnorOff(false);
+                    interactable.TurnInteraction(false);
+                    transform.DORotate(interactable.transform.eulerAngles, 0.5f);
+                    StartCoroutine(interactable.OpenChest());
+                    interactable.oneTimeInterationOver = true;
+                    yield return StartCoroutine(cameraController.StartCinematic(interactable.lookAtObject, interactable.customCameraPoint));
+                    ToggleControlsOnorOff(true);
+                    break;
             }
         }
     }
     #endregion
 
     #region Life
+
+    bool regenerationStarted; //boolean flag for below function only
+    void LifeRegeneration()
+    {
+        if (life <= 99 && !regenerationStarted)
+        {
+            if(RegenerationRoutine != null)
+            {
+                StopCoroutine(RegenerationRoutine);
+            }
+            RegenerationRoutine = StartCoroutine(LifeRegen());
+        }
+    }
+
+    Coroutine RegenerationRoutine;
+    IEnumerator LifeRegen()
+    {
+        float currentLife;
+        regenerationStarted = true;
+        yield return CommonScript.GetDelay(regenerationStartTime);
+        while (life < maxLife)
+        {
+            yield return null;
+            currentLife = life;
+            life += 1;
+            life = Mathf.Clamp(life, 0, maxLife);
+            yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
+            yield return CommonScript.GetDelay(0.1f);
+        }
+        regenerationStarted = false;
+    }
+
+    public IEnumerator GainLife(float value)
+    {
+        float currentLife = life;
+        life += value;
+        life = Mathf.Clamp(life, 0, maxLife);
+        sparks.Play();
+        yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
+    }
+
     IEnumerator LifeDepletion(float damage)
     {
         yield return null;
@@ -275,6 +328,7 @@ public class PlayerController : MonoBehaviour
         {
             float currentLife = life;
             life -= damage;
+            life = Mathf.Clamp(life, 0, maxLife);
             yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
             bloodParticle.Play();
             playerAnimation.Play("Hit");
@@ -308,6 +362,7 @@ public class PlayerController : MonoBehaviour
 
     public void DealDamage(float damage, bool continousDamage)
     {
+        StopRegeneration();
         if (continousDamage)
         {
             TurnMovementOnorOff(false);
@@ -438,6 +493,15 @@ public class PlayerController : MonoBehaviour
                 playerAnimation.Play("Punch");
                 break;
         }
+    }
+
+    void StopRegeneration()
+    {
+        if (RegenerationRoutine != null)
+        {
+            StopCoroutine(RegenerationRoutine);
+        }
+        regenerationStarted = false;
     }
     #endregion
 }

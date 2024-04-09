@@ -5,16 +5,17 @@ using UnityEngine.UI;
 
 public class Interactable : MonoBehaviour
 {
-    public enum InteractionType { Jump, OpenPrison, Portal }
-    public int portalID;
+    public enum InteractionType { Jump, OpenPrison, Portal, HealthChest }
     public InteractionType interactionType;
-    public bool isInteractable;
-    public Transform interactionItem, lookAtObject;
+    public bool isInteractable, oneTimeInterationOver;
+    public Transform interactionItem, lookAtObject, customCameraPoint;
     public AudioClip interactionSound;
     public Light interactionLight;
+    public ParticleSystem interactionParticle;
     public Image marker;
     public CanvasGroup markerCanvas;
     public RectTransform interactionMarker;
+    public float lifeInChest;
     public IEnumerator OpenPrisonDoor()
     {
         Collider collider = interactionItem.GetComponent<Collider>();
@@ -32,6 +33,14 @@ public class Interactable : MonoBehaviour
         {
             PlayerController.instance.StartCoroutine(PlayerController.instance.Death());
         }
+    }
+
+    public IEnumerator OpenChest()
+    {
+        yield return null;
+        interactionParticle.Play();
+        interactionItem.DORotate(new Vector3(0,0,0), 1);
+        PlayerController.instance.StartCoroutine(PlayerController.instance.GainLife(lifeInChest));
     }
 
     public void TurnInteraction(bool on)

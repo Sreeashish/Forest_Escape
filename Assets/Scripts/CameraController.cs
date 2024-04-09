@@ -12,16 +12,21 @@ public class CameraController : MonoBehaviour
     public CinemachineFreeLook freeLookCamera;
     Vector3 posb4Cinematic, rotb4Cinematic;
 
+    public static CameraController instance;
+    private void Awake()
+    {
+        if (instance == null)
+            instance = this;
+    }
+
     public IEnumerator StartCinematic(Transform lookAt, Transform camPos)
     {
         cameraBrain.enabled = false;
         posb4Cinematic = transform.position;
         rotb4Cinematic = transform.rotation.eulerAngles;
         UiController.instance.StartCoroutine(UiController.instance.BringCinematicFramesIn());
-        transform.DOMove(camPos.position, 2);
-        transform.DOLookAt(lookAt.position, 2);
-
         StartCoroutine(ChangeFOV(50, 70, 1));
+        StartCoroutine(PanCamera(camPos.position, lookAt.position, 2));
         yield return CommonScript.GetDelay(2);
         yield return StartCoroutine(EndCinematic());
     }
@@ -43,7 +48,7 @@ public class CameraController : MonoBehaviour
             Quaternion camDirection = transform.rotation;
             camDirection.x = 0;
             camDirection.z = 0;
-            
+
             if (!combatCamIn)
             {
                 cameraBrain.enabled = false;
@@ -54,7 +59,7 @@ public class CameraController : MonoBehaviour
                 transform.rotation = camPos.rotation;
                 combatCamIn = true;
             }
-            
+
         }
         else if (!on)
         {
@@ -94,5 +99,34 @@ public class CameraController : MonoBehaviour
     {
         transform.DOMove(to.position, time);
         transform.DORotate(to.rotation.eulerAngles, time);
+    }
+
+    IEnumerator PanCamera(Vector3 position, Vector3 lookAt, float time)
+    {
+        float t = 0, duration = time;
+        while (t < time)
+        {
+            yield return null;
+            t += Time.deltaTime;
+            float normalizedTime = t / duration;
+            transform.position = Vector3.Lerp(transform.position, position, normalizedTime);
+            Vector3 targetDirection = lookAt - transform.position;
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, normalizedTime);
+        }
+    }
+
+    public bool IsInsideClippingPlanes(Transform objectTransform)
+    {
+        Vector3 viewportPoint = cameraComponent.WorldToViewportPoint(objectTransform.position);
+
+        if (viewportPoint.x >= 0 && viewportPoint.x <= 1 && viewportPoint.y >= 0 && viewportPoint.y <= 1 && viewportPoint.z >= cameraComponent.nearClipPlane && viewportPoint.z <= cameraComponent.farClipPlane)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

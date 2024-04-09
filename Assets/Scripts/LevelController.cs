@@ -11,7 +11,7 @@ public class LevelController : MonoBehaviour
     public List<Interactable> interactables;
     public MeshRenderer water;
     public bool onBoardingCompleted;
-    public Transform respawnPoint, markerUIParent;
+    public Transform respawnPoint;
     public GameObject interactionMarkerPrefab;
 
     Vector2 waterMoveFrom = new Vector2(0, 0.5f);
@@ -73,7 +73,7 @@ public class LevelController : MonoBehaviour
     {
         for (int i = 0; i < interactables.Count; i++)
         {
-            GameObject marker = Instantiate(interactionMarkerPrefab, markerUIParent);
+            GameObject marker = Instantiate(interactionMarkerPrefab, UiController.instance.worldspaceUIElementsHolder);
             interactables[i].interactionMarker = marker.GetComponent<RectTransform>();
             interactables[i].marker = marker.GetComponent<Image>();
             interactables[i].markerCanvas = marker.GetComponent<CanvasGroup>();

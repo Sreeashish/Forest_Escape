@@ -11,8 +11,8 @@ public class EnemyBehaviour : MonoBehaviour
 
     [Header("Enemy Attributes")]
     public EnemyType enemyType;
-    public Transform spawnPoint, forcefieldSphere;
-    public float life, watchTime, chaseDistance, attackDistance;
+    public Transform spawnPoint, hUDPoint;
+    public float life, maxLife, watchTime, chaseDistance, attackDistance, collisionCheckRadius, uiRenderDistance;
     public EnemyState enemyState, previousState;
     public bool hasBeenProvoked;
     public Animation enemyAnimation;
@@ -20,12 +20,67 @@ public class EnemyBehaviour : MonoBehaviour
     public ParticleSystem forcefieldParticle, bloodParticle, deathParticle;
     public List<Transform> patrolPoints = new();
 
+    [Header("HUD")]
+    public GameObject hUDPrefab;
+    public EnemyHUDController enemyHUDController;
+
     private void Start()
     {
+        life = maxLife;
         transform.position = spawnPoint.position;
         ForceFieldAttack(false);
+        CreateHUD();
+        enemyHUDController.StartCoroutine(enemyHUDController.FillLifebar(life, maxLife));
     }
 
+    float distBtwEnemyAndPlayer;
+    private void Update()
+    {
+        if (enemyState != EnemyState.Death && enemyState != EnemyState.GettingHit)
+        {
+            distBtwEnemyAndPlayer = Vector3.Distance(transform.position, PlayerController.instance.transform.position);
+            if (!hasBeenProvoked && distBtwEnemyAndPlayer <= chaseDistance)
+            {
+                if (enemyState != EnemyState.Chase)
+                {
+                    hasBeenProvoked = true;
+                }
+            }
+            else if (enemyState != EnemyState.Patrol && !hasBeenProvoked)
+            {
+                EnemyActions(EnemyState.Patrol);
+            }
+            else if (hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
+            {
+                EnemyActions(EnemyState.Chase);
+            }
+
+            if (hasBeenProvoked && distBtwEnemyAndPlayer < attackDistance && enemyState != EnemyState.Battle)
+            {
+                EnemyActions(EnemyState.Battle);
+            }
+
+            if (hasBeenProvoked && distBtwEnemyAndPlayer > attackDistance && enemyState != EnemyState.Chase && enemyState == EnemyState.Battle)
+            {
+                EnemyActions(EnemyState.Chase);
+            }
+
+            if (hasBeenProvoked && distBtwEnemyAndPlayer > chaseDistance)
+            {
+                GetDistracted();
+            }
+        }
+        if (distBtwEnemyAndPlayer <= uiRenderDistance && CameraController.instance.IsInsideClippingPlanes(transform))
+        {
+            DisplayHUD();
+        }
+        else
+        {
+            enemyHUDController.ShowHUD(false);
+        }
+    }
+
+    #region Behaviours
     public void EnemyActions(EnemyState state, float damageIfAny = 0)
     {
         switch (state)
@@ -73,45 +128,6 @@ public class EnemyBehaviour : MonoBehaviour
         }
     }
 
-    float distBtwEnemyAndPlayer;
-    private void Update()
-    {
-        if (enemyState != EnemyState.Death && enemyState != EnemyState.GettingHit)
-        {
-            distBtwEnemyAndPlayer = Vector3.Distance(transform.position, PlayerController.instance.transform.position);
-            if (!hasBeenProvoked && distBtwEnemyAndPlayer <= chaseDistance)
-            {
-                if (enemyState != EnemyState.Chase)
-                {
-                    hasBeenProvoked = true;
-                }
-            }
-            else if (enemyState != EnemyState.Patrol && !hasBeenProvoked)
-            {
-                EnemyActions(EnemyState.Patrol);
-            }
-            else if (hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
-            {
-                EnemyActions(EnemyState.Chase);
-            }
-
-            if (hasBeenProvoked && distBtwEnemyAndPlayer < attackDistance && enemyState != EnemyState.Battle)
-            {
-                EnemyActions(EnemyState.Battle);
-            }
-
-            if (hasBeenProvoked && distBtwEnemyAndPlayer > attackDistance && enemyState != EnemyState.Chase && enemyState == EnemyState.Battle)
-            {
-                EnemyActions(EnemyState.Chase);
-            }
-
-            if (hasBeenProvoked && distBtwEnemyAndPlayer > chaseDistance)
-            {
-                GetDistracted();
-            }
-        }
-    }
-
     public IEnumerator IdleState()
     {
         yield return null;
@@ -122,6 +138,7 @@ public class EnemyBehaviour : MonoBehaviour
     public Coroutine patrolRoutine; //variable for below coroutine
     public IEnumerator Patrol()
     {
+        AssignHUDState();
         enemyState = EnemyState.Patrol;
         ForceFieldAttack(false);
         while (true)
@@ -144,6 +161,7 @@ public class EnemyBehaviour : MonoBehaviour
     public Coroutine chaseRoutine; //variable for below coroutine
     public IEnumerator ChasePlayer()
     {
+        AssignHUDState();
         enemyState = EnemyState.Chase;
         ForceFieldAttack(false);
         while (hasBeenProvoked)
@@ -158,6 +176,7 @@ public class EnemyBehaviour : MonoBehaviour
     public Coroutine battleRoutine;
     public IEnumerator Battle()
     {
+        AssignHUDState();
         enemyState = EnemyState.Battle;
         while (enemyState == EnemyState.Battle)
         {
@@ -174,8 +193,7 @@ public class EnemyBehaviour : MonoBehaviour
         if (attack)
         {
             forcefieldParticle.Play();
-            forcefieldSphere.gameObject.SetActive(true);
-            forcefieldSphere.DOScale(5, 0.5f);
+
             if (PlayerController.instance.playerState != PlayerController.PlayerState.Dead)
             {
                 PlayerController.instance.DealDamage(15, false);
@@ -184,8 +202,6 @@ public class EnemyBehaviour : MonoBehaviour
         else
         {
             forcefieldParticle.Stop();
-            forcefieldSphere.DOScale(1, 0);
-            forcefieldSphere.gameObject.SetActive(false);
         }
     }
 
@@ -205,10 +221,15 @@ public class EnemyBehaviour : MonoBehaviour
         previousState = enemyState;
         EnemyActions(EnemyState.GettingHit, damage);
     }
+    #endregion
 
+    #region Life
     void LifeDepletion(float damage)
     {
+        float currentLife = life;
         life -= damage;
+        life = Mathf.Clamp(life, 0, maxLife);
+        enemyHUDController.StartCoroutine(enemyHUDController.FillLifebar(currentLife, life));
         bloodParticle.Play();
         enemyAnimation.Play("Hit");
         if (life <= 0)
@@ -230,18 +251,40 @@ public class EnemyBehaviour : MonoBehaviour
         deathParticle.Play();
         yield return CommonScript.GetDelay(1.5f);
         gameObject.SetActive(false);
+        enemyHUDController.ShowHUD(false);
+    }
+    #endregion
+
+    #region HUD
+    void CreateHUD()
+    {
+        GameObject hud = Instantiate(hUDPrefab, UiController.instance.worldspaceUIElementsHolder);
+        enemyHUDController = hud.GetComponent<EnemyHUDController>();
+        enemyHUDController.ShowHUD(false);
+        AssignHUDState();
     }
 
-    //private void OnCollisionEnter(Collision collision)
-    //{
-    //    if (collision.collider.CompareTag("Runic"))
-    //    {
-    //        RunicElementAttributes runic;
-    //        runic = collision.gameObject.GetComponent<RunicElementAttributes>();
-    //        GetHit(runic.damage);
-    //    }
-    //}
+    void DisplayHUD()
+    {
+        enemyHUDController.UpdatePosition(hUDPoint);
+        AssignHUDState();
+    }
 
+    void AssignHUDState()
+    {
+        distBtwEnemyAndPlayer = Vector3.Distance(transform.position, PlayerController.instance.transform.position);
+        if (distBtwEnemyAndPlayer <= uiRenderDistance)
+        {
+            enemyHUDController.SetHUDState(EnemyHUDController.HUDState.Icon);
+        }
+        if(hasBeenProvoked)
+        {
+            enemyHUDController.SetHUDState(EnemyHUDController.HUDState.LifeBar);
+        }
+    }
+    #endregion
+
+    #region SubFuctions
     public void ResetEnemey()
     {
         StopAllCoroutines();
@@ -252,4 +295,5 @@ public class EnemyBehaviour : MonoBehaviour
         if (!enemyAgent.enabled)
             enemyAgent.enabled = true;
     }
+    #endregion
 }
