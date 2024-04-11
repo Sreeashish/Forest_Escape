@@ -11,7 +11,7 @@ public class Interactable : MonoBehaviour
     public Transform interactionItem, lookAtObject, customCameraPoint;
     public AudioClip interactionSound;
     public Light interactionLight;
-    public ParticleSystem interactionParticle;
+    public ParticleSystem interactionParticle, preInteractedParticle;
     public Image marker;
     public CanvasGroup markerCanvas;
     public RectTransform interactionMarker;
@@ -27,7 +27,7 @@ public class Interactable : MonoBehaviour
         yield return CommonScript.GetDelay(2);
         TurnInteraction(true);
         interactionLight.enabled = true;
-        CreateMarker();
+        DisplayMarker(false);
         collider.enabled = true;
         if (collider.bounds.Contains(PlayerController.instance.transform.position))
         {
@@ -38,8 +38,10 @@ public class Interactable : MonoBehaviour
     public IEnumerator OpenChest()
     {
         yield return null;
+        StopPreInteractedParticle();
+        CommonScript.GetDelay(1);
         interactionParticle.Play();
-        interactionItem.DORotate(new Vector3(0,0,0), 1);
+        interactionItem.DORotate(new Vector3(0, 0, 0), 1);
         PlayerController.instance.StartCoroutine(PlayerController.instance.GainLife(lifeInChest));
     }
 
@@ -53,9 +55,9 @@ public class Interactable : MonoBehaviour
 
     public void MarkerState(bool eKey)
     {
-        if(!eKey)
+        if (!eKey)
         {
-            interactionMarker.DOScale(0.5f,0);
+            interactionMarker.DOScale(0.5f, 0);
             marker.sprite = UiController.instance.markerIcon;
         }
         else
@@ -83,14 +85,13 @@ public class Interactable : MonoBehaviour
         }
     }
 
-    public void DestroyMarker()
+    public void PlayPreInteractedParticle()
     {
-        marker.gameObject.SetActive(false);
-        MarkerState(false);
+        preInteractedParticle.Play();
     }
 
-    public void CreateMarker()
+    public void StopPreInteractedParticle()
     {
-        marker.gameObject.SetActive(true);
+        preInteractedParticle.Stop();
     }
 }

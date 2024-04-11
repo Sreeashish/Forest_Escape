@@ -31,6 +31,7 @@ public class LevelController : MonoBehaviour
             OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
         }
         SpawnInteractionMarkers();
+        PlayAllPreInteractiveParticles();
     }
 
     private void Update()
@@ -77,6 +78,7 @@ public class LevelController : MonoBehaviour
             interactables[i].interactionMarker = marker.GetComponent<RectTransform>();
             interactables[i].marker = marker.GetComponent<Image>();
             interactables[i].markerCanvas = marker.GetComponent<CanvasGroup>();
+            interactables[i].DisplayMarker(false);
             interactables[i].MarkerState(false);
         }
     }
@@ -86,6 +88,15 @@ public class LevelController : MonoBehaviour
         for (int i = 0; i < interactables.Count; i++)
         {
             interactables[i].interactionMarker.position = Camera.main.WorldToScreenPoint(interactables[i].transform.position);
+        }
+    }
+
+    void PlayAllPreInteractiveParticles()
+    {
+        for (int i = 0; i < interactables.Count; i++)
+        {
+            if (interactables[i].preInteractedParticle != null)
+                interactables[i].PlayPreInteractedParticle();
         }
     }
 }

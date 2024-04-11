@@ -1,17 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class CombatController : MonoBehaviour
 {
     Camera cam;
-    public float lightAttackDamage, heavyAttackDamage;
-    public float lightAttackRechargeTime, heavyAttackRechargeTime;
+    public float lightAttackDamage, heavyAttackDamage, lightAttackRechargeTime, heavyAttackRechargeTime, aimDistance;
     public RectTransform crosshairRect;
     public RunicElementAttributes runicElement;
     public List<Inventory> runicBullets;
     public int runicsLimit, runicAvailable;
     public Transform triggerPoint, runicsParent;
+    public LayerMask groundLayer;
 
     public static CombatController instance;
     private void Awake()
@@ -60,34 +61,52 @@ public class CombatController : MonoBehaviour
         }
     }
 
-    public IEnumerator CrosshairRay()
+    public void CrosshairRay()
     {
         Vector3 crosshairAimPoint = crosshairRect.position;
         Ray ray = cam.ScreenPointToRay(crosshairAimPoint);
         RaycastHit rayHit;
 
-        if (Physics.Raycast(ray, out rayHit))
+        if (Physics.Raycast(ray, out rayHit, aimDistance))
         {
             Vector3 hitPoint = rayHit.point;
-            Debug.DrawLine(triggerPoint.position, hitPoint, Color.green);
+            bool hitOnNavMesh = NavMesh.SamplePosition(hitPoint, out NavMeshHit navHit, 0.1f, NavMesh.AllAreas);
             if (Input.GetMouseButtonDown(0))
             {
-                PlayerController.instance.SetPlayerMode(PlayerController.PlayerMode.MidAttack);
-                yield return CommonScript.GetDelay(1);
                 StartCoroutine(FireRunic(hitPoint));
             }
+            if (Physics.Raycast(ray, out rayHit, aimDistance, groundLayer) && hitOnNavMesh)
+            {
+                Debug.DrawLine(triggerPoint.position, hitPoint, Color.blue);
+                if (Input.GetMouseButtonDown(2))
+                {
+                    PlayerController.instance.StartCoroutine(PlayerController.instance.TeleportPlayer(hitPoint));
+                }
+            }
+            else
+            {
+                Debug.DrawLine(triggerPoint.position, hitPoint, Color.green);
+
+            }
+        }
+        else
+        {
+            Vector3 endPoint = ray.origin + ray.direction * aimDistance;
+            Debug.DrawLine(triggerPoint.position, endPoint, Color.red);
         }
     }
 
     IEnumerator FireRunic(Vector3 hitPoint)
     {
         Vector3 fixedHitPoint = hitPoint;
-        if (runicBullets.Count > 0)
+        if (runicAvailable > 0)
         {
             foreach (Inventory bullet in runicBullets)
             {
                 if (!bullet.isFired)
                 {
+                    PlayerController.instance.SetPlayerMode(PlayerController.PlayerMode.MidAttack);
+                    yield return CommonScript.GetDelay(0.75f);
                     bullet.runics.gameObject.SetActive(true);
                     bullet.runics.StartCoroutine(bullet.runics.RunicTrajectory(triggerPoint, fixedHitPoint, lightAttackDamage));
                     bullet.isFired = true;
@@ -98,6 +117,10 @@ public class CombatController : MonoBehaviour
                     break;
                 }
             }
+        }
+        else
+        {
+            PlayerController.instance.SetPlayerMode(PlayerController.PlayerMode.CombatReady);
         }
     }
 }

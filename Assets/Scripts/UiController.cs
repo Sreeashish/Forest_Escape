@@ -138,16 +138,14 @@ public class UiController : MonoBehaviour
         CalculateLife(PlayerController.instance.life);
         yield return CommonScript.GetDelay(0.8f);
         RemoveDeathScreen();
-        BlackScreenOut();
+        BringBlackScreen(false);
     }
 
-    public void BlackScreenIn()
+    public void BringBlackScreen(bool bringIn, float customTime = 1)
     {
+        if (!bringIn)
         blackScreen.DOFade(1, 0);
-    }
-
-    void BlackScreenOut()
-    {
-        blackScreen.DOFade(0, 1);
+        else
+            blackScreen.DOFade(0, customTime);
     }
 }

@@ -167,7 +167,7 @@ public class PlayerController : MonoBehaviour
         if (enable)
         {
             SetPlayerMode(PlayerMode.CombatReady);
-            combatController.StartCoroutine(combatController.CrosshairRay());
+            combatController.CrosshairRay();
             cameraController.CombatCamera(true, aimCameraPoint);
             UiController.instance.Crosshair(true);
             AimCamera();
@@ -192,6 +192,15 @@ public class PlayerController : MonoBehaviour
 
         transform.localEulerAngles = new Vector3(0, rotationX, 0);
         cameraTransform.localEulerAngles = new Vector3(rotationY, 0, 0);
+    }
+
+    public IEnumerator TeleportPlayer(Vector3 teleportTo)
+    {
+        ToggleControlsOnorOff(false);
+        UiController.instance.BringBlackScreen(true);
+        yield return CommonScript.GetDelay(0.2f);
+        transform.position = teleportTo;
+        UiController.instance.BringBlackScreen(false, 0.2f);
     }
     #endregion
 
@@ -221,8 +230,16 @@ public class PlayerController : MonoBehaviour
             {
                 if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 5)
                 {
-                    interactablesInCurrentLevel[i].DisplayMarker(true);
-                    interactablesInCurrentLevel[i].MarkerState(false);
+                    if (CameraController.instance.IsInsideClippingPlanes(interactablesInCurrentLevel[i].transform) && interactablesInCurrentLevel[i].isInteractable)
+                    {
+                        interactablesInCurrentLevel[i].DisplayMarker(true);
+                    }
+                    else
+                    {
+                        interactablesInCurrentLevel[i].DisplayMarker(false);
+                    }
+                        interactablesInCurrentLevel[i].MarkerState(false);
+                    
                     if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 2f)
                     {
                         if (interactablesInCurrentLevel[i].isInteractable && !interactablesInCurrentLevel[i].oneTimeInterationOver)
@@ -241,6 +258,10 @@ public class PlayerController : MonoBehaviour
                     interactablesInCurrentLevel[i].DisplayMarker(false);
                 }
             }
+            else
+            {
+                interactablesInCurrentLevel[i].DisplayMarker(false);
+            }
         }
     }
 
@@ -248,7 +269,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(interactionButton))
         {
-            interactable.DestroyMarker();
+            interactable.DisplayMarker(false);
             switch (interactable.interactionType)
             {
                 case Interactable.InteractionType.OpenPrison:
@@ -263,7 +284,7 @@ public class PlayerController : MonoBehaviour
                     interactable.TurnInteraction(false);
                     StartCoroutine(PlayerJump(interactable.interactionItem));
                     interactable.TurnInteraction(true);
-                    interactable.CreateMarker();
+                    interactable.DisplayMarker(true);
                     break;
                 case Interactable.InteractionType.HealthChest:
                     ToggleControlsOnorOff(false);
@@ -396,9 +417,9 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     #region SubFunctions
-    public void ToggleControlsOnorOff(bool onOff)
+    public void ToggleControlsOnorOff(bool turnOn)
     {
-        if (onOff)
+        if (turnOn)
         {
             isControllable = true;
             freeLookCamera.enabled = true;
@@ -438,7 +459,7 @@ public class PlayerController : MonoBehaviour
 
     public void ResetPlayer(Vector3 position)
     {
-        UiController.instance.BlackScreenIn();
+        UiController.instance.BringBlackScreen(true);
         transform.position = position;
         playerBody.position = position;
         cameraController.cameraBrain.enabled = false;
