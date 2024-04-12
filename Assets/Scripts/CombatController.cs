@@ -93,6 +93,7 @@ public class CombatController : MonoBehaviour
         {
             Vector3 endPoint = ray.origin + ray.direction * aimDistance;
             Debug.DrawLine(triggerPoint.position, endPoint, Color.red);
+            print("TOO FAR OUT");
         }
     }
 

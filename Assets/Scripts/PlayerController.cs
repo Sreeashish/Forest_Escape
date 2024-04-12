@@ -20,7 +20,7 @@ public class PlayerController : MonoBehaviour
     public PlayerState playerState;
     public PlayerMode playerMode;
     public bool isControllable, onground, raycasting;
-    public float walkingSpeed, sprintSpeed, turnSmoothTime = 0.1f;
+    public float walkingSpeed, sprintSpeed, turnSmoothTime = 0.1f, groundCheckSensorDistance;
     public KeyCode sprintButton;
     public KeyCode interactionButton;
     public LayerMask groundMask;
@@ -31,8 +31,9 @@ public class PlayerController : MonoBehaviour
 
     public bool OnGround()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, 1, groundMask))
+        if (Physics.Raycast(transform.position, Vector3.down, groundCheckSensorDistance, groundMask))
         {
+            Debug.DrawRay(transform.position, Vector3.down * groundCheckSensorDistance, Color.yellow);
             return true;
         }
         else
@@ -149,7 +150,7 @@ public class PlayerController : MonoBehaviour
 
     void CombatActivations()
     {
-        if (levelController.onBoardingCompleted)
+        if (OnboardingController.instance.phase >= OnboardingController.OnBoardingPhase.Phase2)
         {
             if (Input.GetMouseButton(1) && playerMode != PlayerMode.MidAttack)
             {
@@ -238,8 +239,8 @@ public class PlayerController : MonoBehaviour
                     {
                         interactablesInCurrentLevel[i].DisplayMarker(false);
                     }
-                        interactablesInCurrentLevel[i].MarkerState(false);
-                    
+                    interactablesInCurrentLevel[i].MarkerState(false);
+
                     if (Vector3.Distance(transform.position, interactablesInCurrentLevel[i].transform.position) <= 2f)
                     {
                         if (interactablesInCurrentLevel[i].isInteractable && !interactablesInCurrentLevel[i].oneTimeInterationOver)
@@ -307,7 +308,7 @@ public class PlayerController : MonoBehaviour
     {
         if (life <= 99 && !regenerationStarted)
         {
-            if(RegenerationRoutine != null)
+            if (RegenerationRoutine != null)
             {
                 StopCoroutine(RegenerationRoutine);
             }

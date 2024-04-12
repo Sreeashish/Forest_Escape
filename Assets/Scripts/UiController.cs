@@ -13,7 +13,7 @@ public class UiController : MonoBehaviour
 
     [Header("SPRITES")]
     public Sprite eKey;
-    public Sprite markerIcon;
+    public Sprite markerIcon, wKey, aKey, sKey, dKey, mouseIcon, lMBIcon, rMBIcon, mMBIcon;
 
     [Header("WORLDSPACE UI ELEMENTS")]
     public Transform worldspaceUIElementsHolder;

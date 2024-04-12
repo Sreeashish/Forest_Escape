@@ -33,6 +33,10 @@ public class Interactable : MonoBehaviour
         {
             PlayerController.instance.StartCoroutine(PlayerController.instance.Death());
         }
+        if (!PlayerController.instance.levelController.onBoardingCompleted)
+        {
+            OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
+        }
     }
 
     public IEnumerator OpenChest()
