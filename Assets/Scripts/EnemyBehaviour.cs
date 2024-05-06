@@ -11,7 +11,7 @@ public class EnemyBehaviour : MonoBehaviour
 
     [Header("Enemy Attributes")]
     public EnemyType enemyType;
-    public Transform spawnPoint, hUDPoint;
+    public Transform spawnPoint, hUDPoint, recoilHitPoint;
     public float life, maxLife, watchTime, chaseDistance, attackDistance, collisionCheckRadius, uiRenderDistance;
     public EnemyState enemyState, previousState;
     public bool hasBeenSpotted, hasBeenProvoked;
@@ -113,7 +113,7 @@ public class EnemyBehaviour : MonoBehaviour
 
             case EnemyState.GettingHit:
                 StopAllCoroutines();
-                LifeDepletion(damageIfAny);
+                StartCoroutine(LifeDepletion(damageIfAny));
                 break;
 
             case EnemyState.Death:
@@ -216,10 +216,21 @@ public class EnemyBehaviour : MonoBehaviour
         previousState = enemyState;
         EnemyActions(EnemyState.GettingHit, damage);
     }
+
+    IEnumerator GetHitAnimation()
+    {
+        bloodParticle.Play();
+        enemyAnimation.Play("Hit");
+        enemyAgent.enabled = false;
+        Vector3 recoilPos = recoilHitPoint.position;
+        transform.DOMove(recoilPos, 0.5f);
+        yield return CommonScript.GetDelay(0.5f);
+        enemyAgent.enabled = true;
+    }
     #endregion
 
     #region Life
-    void LifeDepletion(float damage)
+    IEnumerator LifeDepletion(float damage)
     {
         if (!hasBeenProvoked)
         {
@@ -228,9 +239,8 @@ public class EnemyBehaviour : MonoBehaviour
         float currentLife = life;
         life -= damage;
         life = Mathf.Clamp(life, 0, maxLife);
+        yield return StartCoroutine(GetHitAnimation());
         enemyHUDController.StartCoroutine(enemyHUDController.FillLifebar(currentLife, life));
-        bloodParticle.Play();
-        enemyAnimation.Play("Hit");
         if (life <= 0)
         {
             EnemyActions(EnemyState.Death);

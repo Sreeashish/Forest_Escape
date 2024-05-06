@@ -12,6 +12,7 @@ public class CombatController : MonoBehaviour
     public List<Inventory> runicBullets;
     public int runicsLimit, runicAvailable;
     public Transform triggerPoint, runicsParent;
+    public bool isTeleportable;
     public LayerMask groundLayer;
 
     public static CombatController instance;
@@ -66,34 +67,39 @@ public class CombatController : MonoBehaviour
         Vector3 crosshairAimPoint = crosshairRect.position;
         Ray ray = cam.ScreenPointToRay(crosshairAimPoint);
         RaycastHit rayHit;
-
         if (Physics.Raycast(ray, out rayHit, aimDistance))
         {
+            UiController.instance.CrosshairState(rayHit, true);
             Vector3 hitPoint = rayHit.point;
-            bool hitOnNavMesh = NavMesh.SamplePosition(hitPoint, out NavMeshHit navHit, 0.1f, NavMesh.AllAreas);
             if (Input.GetMouseButtonDown(0))
             {
                 StartCoroutine(FireRunic(hitPoint));
             }
-            if (Physics.Raycast(ray, out rayHit, aimDistance, groundLayer) && hitOnNavMesh)
+            if (Physics.Raycast(ray, out rayHit, aimDistance, groundLayer))
             {
-                Debug.DrawLine(triggerPoint.position, hitPoint, Color.blue);
-                if (Input.GetMouseButtonDown(2))
+                if (isTeleportable && NavMesh.SamplePosition(hitPoint, out NavMeshHit navHit, 0.1f, 3))
                 {
-                    PlayerController.instance.StartCoroutine(PlayerController.instance.TeleportPlayer(hitPoint));
+                    Debug.DrawLine(triggerPoint.position, hitPoint, Color.magenta);
+                    if (Input.GetMouseButtonDown(2))
+                    {
+                        PlayerController.instance.StartCoroutine(PlayerController.instance.TeleportPlayer(hitPoint));
+                    }
+                }
+                else
+                {
+                    Debug.DrawLine(triggerPoint.position, hitPoint, Color.cyan);
                 }
             }
             else
             {
                 Debug.DrawLine(triggerPoint.position, hitPoint, Color.green);
-
             }
         }
         else
         {
+            UiController.instance.CrosshairState(rayHit);
             Vector3 endPoint = ray.origin + ray.direction * aimDistance;
             Debug.DrawLine(triggerPoint.position, endPoint, Color.red);
-            print("TOO FAR OUT");
         }
     }
 

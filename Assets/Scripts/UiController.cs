@@ -7,8 +7,8 @@ public class UiController : MonoBehaviour
 {
     [Header("UI ELEMENTS & ATTRIBUTES")]
     public CanvasGroup HUDCanvas;
-    public CanvasGroup cinematicCanvas, deathScreen, blackScreen, crosshairReticle;
-    public Image lifeBar, runicBar, CinematicTopBar, CinematicBottomBar, heartImage;
+    public CanvasGroup cinematicCanvas, deathScreen, blackScreen, crosshairReticle, teleportationIndicator;
+    public Image lifeBar, runicBar, CinematicTopBar, CinematicBottomBar, heartImage, crosshairReticleImage;
     public RectTransform respawnTextHolder;
 
     [Header("SPRITES")]
@@ -25,16 +25,19 @@ public class UiController : MonoBehaviour
             instance = this;
     }
 
-    Coroutine HeartBeatRoutine;
     private void Start()
     {
         CalculateLife(PlayerController.instance.life);
         RemoveDeathScreen();
-        if (HeartBeatRoutine != null)
+        StartHeartBeat();
+        if (PlayerController.instance.combatController.isTeleportable)
         {
-            StopCoroutine(HeartBeatRoutine);
+            StartTeleportationIndicator();
         }
-        HeartBeatRoutine = StartCoroutine(HeartBeat());
+        else
+        {
+            StopTeleportationIndicator();
+        }
     }
 
     public IEnumerator BringCinematicFramesIn()
@@ -114,6 +117,22 @@ public class UiController : MonoBehaviour
         }
     }
 
+    public void CrosshairState(RaycastHit hit, bool scan = false)
+    {
+        if (scan)
+        {
+            if (hit.collider.CompareTag("Enemy"))
+                crosshairReticleImage.color = Color.red;
+            else
+                crosshairReticleImage.color = Color.white;
+        }
+        else
+        {
+            crosshairReticleImage.color = Color.white;
+        }
+    }
+
+    Coroutine HeartBeatRoutine;
     IEnumerator HeartBeat()
     {
         while (true)
@@ -126,6 +145,52 @@ public class UiController : MonoBehaviour
             yield return CommonScript.GetDelay(0.8f);
         }
     }
+    void StartHeartBeat()
+    {
+        if (HeartBeatRoutine != null)
+        {
+            StopCoroutine(HeartBeatRoutine);
+        }
+        HeartBeatRoutine = StartCoroutine(HeartBeat());
+    }
+    void StopHeartBeat()
+    {
+        if (HeartBeatRoutine != null)
+        {
+            StopCoroutine(HeartBeatRoutine);
+        }
+    }
+
+
+    Coroutine TeleportationIndicatorRoutine;
+    IEnumerator TeleportationIndicator()
+    {
+        while (true)
+        {
+            yield return null;
+            teleportationIndicator.DOFade(1, 1);
+            yield return CommonScript.GetDelay(1);
+            teleportationIndicator.DOFade(0, 1);
+            yield return CommonScript.GetDelay(1);
+        }
+    }
+    void StartTeleportationIndicator()
+    {
+        if (TeleportationIndicatorRoutine != null)
+        {
+            StopCoroutine(TeleportationIndicatorRoutine);
+        }
+        TeleportationIndicatorRoutine = StartCoroutine(TeleportationIndicator());
+    }
+    void StopTeleportationIndicator()
+    {
+        if (TeleportationIndicatorRoutine != null)
+        {
+            StopCoroutine(TeleportationIndicatorRoutine);
+        }
+        teleportationIndicator.DOFade(0, 0);
+    }
+
 
     public void RemoveDeathScreen()
     {
@@ -144,7 +209,7 @@ public class UiController : MonoBehaviour
     public void BringBlackScreen(bool bringIn, float customTime = 1)
     {
         if (!bringIn)
-        blackScreen.DOFade(1, 0);
+            blackScreen.DOFade(1, 0);
         else
             blackScreen.DOFade(0, customTime);
     }

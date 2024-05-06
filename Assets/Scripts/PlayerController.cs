@@ -150,7 +150,7 @@ public class PlayerController : MonoBehaviour
 
     void CombatActivations()
     {
-        if (OnboardingController.instance.phase >= OnboardingController.OnBoardingPhase.Phase2)
+        if (OnboardingController.instance.phase >= OnboardingController.OnBoardingPhase.Phase2 || levelController.onBoardingCompleted)
         {
             if (Input.GetMouseButton(1) && playerMode != PlayerMode.MidAttack)
             {
