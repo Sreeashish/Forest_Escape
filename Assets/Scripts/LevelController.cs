@@ -26,6 +26,13 @@ public class LevelController : MonoBehaviour
             if (onBoardingCompleted)
             {
                 TurnAllInteractablesOn();
+                for (int i = 0; i < interactables.Count; i++)
+                {
+                    if(interactables[i].interactionType == Interactable.InteractionType.Portal)
+                    {
+                        interactables[i].isInteractable = false;
+                    }
+                }
             }
             StartCoroutine(WaterAnimation());
             OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
@@ -97,6 +104,17 @@ public class LevelController : MonoBehaviour
         {
             if (interactables[i].preInteractedParticle != null)
                 interactables[i].PlayPreInteractedParticle();
+        }
+    }
+
+    public void EnableLastInteractionForTheLevel()
+    {
+        for(int i = 0;i < interactables.Count;i++)
+        {
+            if (interactables[i].interactionType == Interactable.InteractionType.Portal)
+            {
+                interactables[i].isInteractable = true;
+            }
         }
     }
 }

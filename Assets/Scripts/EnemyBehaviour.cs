@@ -11,6 +11,7 @@ public class EnemyBehaviour : MonoBehaviour
 
     [Header("Enemy Attributes")]
     public EnemyType enemyType;
+    public Levels gameLevel;
     public Transform spawnPoint, hUDPoint, recoilHitPoint;
     public float life, maxLife, watchTime, chaseDistance, attackDistance, collisionCheckRadius, uiRenderDistance;
     public EnemyState enemyState, previousState;
@@ -38,6 +39,7 @@ public class EnemyBehaviour : MonoBehaviour
         ForceFieldAttack(false);
         CreateHUD();
         enemyHUDController.StartCoroutine(enemyHUDController.FillLifebar(life, maxLife));
+        gameLevel = GameController.instance.currentLevel.level;
     }
 
 
@@ -54,17 +56,20 @@ public class EnemyBehaviour : MonoBehaviour
             if (enemyState != EnemyState.Patrol && !hasBeenSpotted && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle
                 || enemyState != EnemyState.Patrol && !hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
             {
+                print("ASSS");
                 EnemyActions(EnemyState.Patrol);
             }
-            if (!hasBeenSpotted && DistanceBtwEnemyAndPlayer() < chaseDistance && enemyState != EnemyState.Chase
-                || DistanceBtwEnemyAndPlayer() > attackDistance && enemyState == EnemyState.Battle && enemyState != EnemyState.Chase
-                || hasBeenProvoked && enemyState != EnemyState.Chase)
+            if (!hasBeenSpotted && DistanceBtwEnemyAndPlayer() < chaseDistance && enemyState != EnemyState.Chase && !hasBeenProvoked
+                || DistanceBtwEnemyAndPlayer() > attackDistance && enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenProvoked
+                || DistanceBtwEnemyAndPlayer() > attackDistance && enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenSpotted
+                || hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
             {
                 hasBeenSpotted = true;
                 EnemyActions(EnemyState.Chase);
             }
             if (DistanceBtwEnemyAndPlayer() < attackDistance && enemyState != EnemyState.Battle)
             {
+                print("State" + enemyState);
                 EnemyActions(EnemyState.Battle);
             }
             if (hasBeenSpotted && DistanceBtwEnemyAndPlayer() > chaseDistance && !hasBeenProvoked)
@@ -175,6 +180,7 @@ public class EnemyBehaviour : MonoBehaviour
         enemyState = EnemyState.Battle;
         while (enemyState == EnemyState.Battle)
         {
+            print("INNNN");
             yield return null;
             enemyAnimation.Play("Taunting");
             ForceFieldAttack(true);
@@ -239,8 +245,8 @@ public class EnemyBehaviour : MonoBehaviour
         float currentLife = life;
         life -= damage;
         life = Mathf.Clamp(life, 0, maxLife);
-        yield return StartCoroutine(GetHitAnimation());
         enemyHUDController.StartCoroutine(enemyHUDController.FillLifebar(currentLife, life));
+        yield return StartCoroutine(GetHitAnimation());
         if (life <= 0)
         {
             EnemyActions(EnemyState.Death);
@@ -261,6 +267,10 @@ public class EnemyBehaviour : MonoBehaviour
         yield return CommonScript.GetDelay(1.5f);
         gameObject.SetActive(false);
         enemyHUDController.ShowHUD(false);
+        if(gameLevel == Levels.Level1)
+        {
+            GameController.instance.currentLevel.EnableLastInteractionForTheLevel();
+        }
     }
     #endregion
 

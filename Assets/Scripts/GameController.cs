@@ -8,6 +8,7 @@ public class GameController : MonoBehaviour
     public static GameController instance;
     public KeyCode respawnButton;
     public bool isPlayerDead;
+    public LevelController currentLevel;
 
     private void Awake()
     {

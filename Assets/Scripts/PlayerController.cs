@@ -3,6 +3,7 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class PlayerController : MonoBehaviour
 {
@@ -98,20 +99,40 @@ public class PlayerController : MonoBehaviour
 
             if (direction.magnitude >= 0.1f)
             {
-                float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnVelocity, turnSmoothTime);
-                transform.rotation = Quaternion.Euler(0f, angle, 0f);
-                Vector3 moveDirection = Quaternion.Euler(0, targetAngle, 0f) * Vector3.forward;
-                if (Input.GetKey(sprintButton))
+                if (playerMode == PlayerMode.Exploring)
                 {
-                    player.Move(moveDirection.normalized * sprintSpeed * Time.deltaTime);
-                    SetPlayerState(PlayerState.Running);
+                    float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+                    float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnVelocity, turnSmoothTime);
+                    transform.rotation = Quaternion.Euler(0f, angle, 0f);
+                    Vector3 moveDirection = Quaternion.Euler(0, targetAngle, 0f) * Vector3.forward;
+                    if (Input.GetKey(sprintButton))
+                    {
+                        player.Move(moveDirection.normalized * sprintSpeed * Time.deltaTime);
+                        SetPlayerState(PlayerState.Running);
+                    }
+                    else
+                    {
+                        player.Move(moveDirection.normalized * walkingSpeed * Time.deltaTime);
+                        SetPlayerState(PlayerState.Walking);
+                    }
                 }
-                else
+
+
+                else if(playerMode == PlayerMode.CombatReady)
                 {
-                    player.Move(moveDirection.normalized * walkingSpeed * Time.deltaTime);
-                    SetPlayerState(PlayerState.Walking);
+                    if (Input.GetKey(sprintButton))
+                    {
+                        transform.Translate(direction.normalized * sprintSpeed * Time.deltaTime);
+                        SetPlayerState(PlayerState.Running);
+                    }
+                    else
+                    {
+                        transform.Translate(direction.normalized * walkingSpeed * Time.deltaTime);
+                        SetPlayerState(PlayerState.Walking);
+                    }
                 }
+
+
             }
             else
             {
