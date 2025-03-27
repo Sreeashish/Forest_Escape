@@ -11,6 +11,7 @@ TagManager:
   - Lethal
   - FxTemporaire
   - Runic
+  - Interactable
   layers:
   - Default
   - TransparentFX
@@ -23,8 +24,8 @@ TagManager:
   - Player
   - Enemy
   - Lethal
-  - 
-  - 
+  - Cover
+  - Agent
   - 
   - 
   - 

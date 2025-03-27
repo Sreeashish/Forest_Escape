@@ -28,7 +28,7 @@ public class LevelController : MonoBehaviour
                 TurnAllInteractablesOn();
                 for (int i = 0; i < interactables.Count; i++)
                 {
-                    if(interactables[i].interactionType == Interactable.InteractionType.Portal)
+                    if(interactables[i].interactionType == InteractionType.Portal)
                     {
                         interactables[i].isInteractable = false;
                     }
@@ -111,7 +111,7 @@ public class LevelController : MonoBehaviour
     {
         for(int i = 0;i < interactables.Count;i++)
         {
-            if (interactables[i].interactionType == Interactable.InteractionType.Portal)
+            if (interactables[i].interactionType == InteractionType.Portal)
             {
                 interactables[i].isInteractable = true;
             }

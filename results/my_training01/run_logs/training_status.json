@@ -1,0 +1,87 @@
+{
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "2.5.1+cpu"
+    },
+    "ML Agent Controller": {
+        "checkpoints": [
+            {
+                "steps": 86198,
+                "file_path": "results\\my_training01\\ML Agent Controller\\ML Agent Controller-86198.onnx",
+                "reward": -0.7706784792354325,
+                "creation_time": 1742337138.9597838,
+                "auxillary_file_paths": [
+                    "results\\my_training01\\ML Agent Controller\\ML Agent Controller-86198.pt"
+                ]
+            },
+            {
+                "steps": 93593,
+                "file_path": "results\\my_training01\\ML Agent Controller\\ML Agent Controller-93593.onnx",
+                "reward": -0.8664747476577759,
+                "creation_time": 1742601254.4092357,
+                "auxillary_file_paths": [
+                    "results\\my_training01\\ML Agent Controller\\ML Agent Controller-93593.pt"
+                ]
+            },
+            {
+                "steps": 97442,
+                "file_path": "results\\my_training01\\ML Agent Controller\\ML Agent Controller-97442.onnx",
+                "reward": -1.5365946502298922,
+                "creation_time": 1742780365.3839083,
+                "auxillary_file_paths": [
+                    "results\\my_training01\\ML Agent Controller\\ML Agent Controller-97442.pt"
+                ]
+            },
+            {
+                "steps": 107687,
+                "file_path": "results\\my_training01\\ML Agent Controller\\ML Agent Controller-107687.onnx",
+                "reward": null,
+                "creation_time": 1742827636.6063397,
+                "auxillary_file_paths": [
+                    "results\\my_training01\\ML Agent Controller\\ML Agent Controller-107687.pt"
+                ]
+            },
+            {
+                "steps": 110422,
+                "file_path": "results\\my_training01\\ML Agent Controller\\ML Agent Controller-110422.onnx",
+                "reward": 3.034092016518116,
+                "creation_time": 1742828056.0215743,
+                "auxillary_file_paths": [
+                    "results\\my_training01\\ML Agent Controller\\ML Agent Controller-110422.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 110422,
+            "file_path": "results\\my_training01\\ML Agent Controller.onnx",
+            "reward": 3.034092016518116,
+            "creation_time": 1742828056.0215743,
+            "auxillary_file_paths": [
+                "results\\my_training01\\ML Agent Controller\\ML Agent Controller-110422.pt"
+            ]
+        }
+    },
+    "MLAgentController": {
+        "checkpoints": [
+            {
+                "steps": 0,
+                "file_path": "results\\my_training01\\MLAgentController\\MLAgentController-0.onnx",
+                "reward": null,
+                "creation_time": 1742828962.7200444,
+                "auxillary_file_paths": [
+                    "results\\my_training01\\MLAgentController\\MLAgentController-0.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 0,
+            "file_path": "results\\my_training01\\MLAgentController.onnx",
+            "reward": null,
+            "creation_time": 1742828962.7200444,
+            "auxillary_file_paths": [
+                "results\\my_training01\\MLAgentController\\MLAgentController-0.pt"
+            ]
+        }
+    }
+}

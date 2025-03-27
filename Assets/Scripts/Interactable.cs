@@ -2,10 +2,11 @@ using DG.Tweening;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+public enum InteractionType { Jump, OpenPrison, Portal, HealthChest }
 
 public class Interactable : MonoBehaviour
 {
-    public enum InteractionType { Jump, OpenPrison, Portal, HealthChest }
+    
     public InteractionType interactionType;
     public bool isInteractable, oneTimeInterationOver;
     public Transform interactionItem, lookAtObject, customCameraPoint;

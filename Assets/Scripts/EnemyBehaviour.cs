@@ -16,6 +16,9 @@ public class EnemyBehaviour : MonoBehaviour
     public float life, maxLife, watchTime, chaseDistance, attackDistance, collisionCheckRadius, uiRenderDistance;
     public EnemyState enemyState, previousState;
     public bool hasBeenSpotted, hasBeenProvoked;
+    public LayerMask playerMask;
+    public Transform rayOrigin;
+    public float visionRange, angleBetweenRays, noOfRays;
     public Animation enemyAnimation;
     public NavMeshAgent enemyAgent;
     public ParticleSystem forcefieldParticle, bloodParticle, deathParticle;
@@ -45,31 +48,30 @@ public class EnemyBehaviour : MonoBehaviour
 
     private void Update()
     {
-        AssignActions();
+        AssignBehaviour();
+        //AssignActions();
         DisplayHUD();
     }
     #region StateChecking
-    void AssignActions()
+    void AssignBehaviour()
     {
+        OpenEyeSensors();
         if (enemyState != EnemyState.Death && enemyState != EnemyState.GettingHit)
         {
             if (enemyState != EnemyState.Patrol && !hasBeenSpotted && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle
                 || enemyState != EnemyState.Patrol && !hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
             {
-                print("ASSS");
                 EnemyActions(EnemyState.Patrol);
             }
-            if (!hasBeenSpotted && DistanceBtwEnemyAndPlayer() < chaseDistance && enemyState != EnemyState.Chase && !hasBeenProvoked
-                || DistanceBtwEnemyAndPlayer() > attackDistance && enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenProvoked
-                || DistanceBtwEnemyAndPlayer() > attackDistance && enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenSpotted
+            if (hasBeenSpotted && enemyState != EnemyState.Chase && !hasBeenProvoked
+                || enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenProvoked
+                || enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenSpotted
                 || hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
             {
-                hasBeenSpotted = true;
                 EnemyActions(EnemyState.Chase);
             }
             if (DistanceBtwEnemyAndPlayer() < attackDistance && enemyState != EnemyState.Battle)
             {
-                print("State" + enemyState);
                 EnemyActions(EnemyState.Battle);
             }
             if (hasBeenSpotted && DistanceBtwEnemyAndPlayer() > chaseDistance && !hasBeenProvoked)
@@ -78,6 +80,57 @@ public class EnemyBehaviour : MonoBehaviour
             }
         }
     }
+
+    void OpenEyeSensors()
+    {
+        if (!hasBeenSpotted)
+        {
+            float step = angleBetweenRays / (noOfRays - 1);
+            for (int i = 0; i < noOfRays; i++)
+            {
+                float angle = -angleBetweenRays / 2 + i * step;
+                Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward;
+
+                Ray ray = new(rayOrigin.position, direction);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit, visionRange, playerMask))
+                {
+                    hasBeenSpotted = true;
+                }
+                Vector3 endPoint = ray.origin + ray.direction * visionRange;
+                Debug.DrawLine(rayOrigin.position, endPoint, Color.red);
+            }
+        }
+    }
+
+    //void AssignActions()
+    //{
+    //    if (enemyState != EnemyState.Death && enemyState != EnemyState.GettingHit)
+    //    {
+    //        if (enemyState != EnemyState.Patrol && !hasBeenSpotted && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle
+    //            || enemyState != EnemyState.Patrol && !hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
+    //        {
+    //            EnemyActions(EnemyState.Patrol);
+    //        }
+    //        if (!hasBeenSpotted && DistanceBtwEnemyAndPlayer() < chaseDistance && enemyState != EnemyState.Chase && !hasBeenProvoked
+    //            || DistanceBtwEnemyAndPlayer() > attackDistance && enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenProvoked
+    //            || DistanceBtwEnemyAndPlayer() > attackDistance && enemyState == EnemyState.Battle && enemyState != EnemyState.Chase && hasBeenSpotted
+    //            || hasBeenProvoked && enemyState != EnemyState.Chase && enemyState != EnemyState.Battle)
+    //        {
+    //            hasBeenSpotted = true;
+    //            EnemyActions(EnemyState.Chase);
+    //        }
+    //        if (DistanceBtwEnemyAndPlayer() < attackDistance && enemyState != EnemyState.Battle)
+    //        {
+    //            EnemyActions(EnemyState.Battle);
+    //        }
+    //        if (hasBeenSpotted && DistanceBtwEnemyAndPlayer() > chaseDistance && !hasBeenProvoked)
+    //        {
+    //            GetDistracted();
+    //        }
+    //    }
+    //}
     #endregion
 
     #region Behaviours
@@ -180,7 +233,6 @@ public class EnemyBehaviour : MonoBehaviour
         enemyState = EnemyState.Battle;
         while (enemyState == EnemyState.Battle)
         {
-            print("INNNN");
             yield return null;
             enemyAnimation.Play("Taunting");
             ForceFieldAttack(true);
@@ -267,7 +319,7 @@ public class EnemyBehaviour : MonoBehaviour
         yield return CommonScript.GetDelay(1.5f);
         gameObject.SetActive(false);
         enemyHUDController.ShowHUD(false);
-        if(gameLevel == Levels.Level1)
+        if (gameLevel == Levels.Level1)
         {
             GameController.instance.currentLevel.EnableLastInteractionForTheLevel();
         }

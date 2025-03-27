@@ -1,0 +1,49 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1742828947",
+        "python_version": "3.9.13 (tags/v3.9.13:6de2ca5, May 17 2022, 16:36:42) [MSC v.1929 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Sree's Files\\Unity Projects and Assets\\Unity Projects\\Forest Escape\\venv\\Scripts\\mlagents-learn MLAgents/Configs/forest_escape_config.yaml --run-id=my_training01 --resume",
+        "mlagents_version": "0.30.0",
+        "mlagents_envs_version": "0.30.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.5.1+cpu",
+        "numpy_version": "1.19.5",
+        "end_time_seconds": "1742828962"
+    },
+    "total": 14.972500100000001,
+    "count": 1,
+    "self": 0.05629820000000052,
+    "children": {
+        "run_training.setup": {
+            "total": 0.271023,
+            "count": 1,
+            "self": 0.271023
+        },
+        "TrainerController.start_learning": {
+            "total": 14.645178900000001,
+            "count": 1,
+            "self": 0.0005106000000019151,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 14.1610102,
+                    "count": 1,
+                    "self": 14.1610102
+                },
+                "TrainerController._save_models": {
+                    "total": 0.48365809999999954,
+                    "count": 1,
+                    "self": 0.01770339999999848,
+                    "children": {
+                        "RLTrainer._checkpoint": {
+                            "total": 0.46595470000000105,
+                            "count": 1,
+                            "self": 0.46595470000000105
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

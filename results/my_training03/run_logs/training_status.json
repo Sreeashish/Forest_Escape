@@ -1,0 +1,29 @@
+{
+    "ML Agent Controller": {
+        "checkpoints": [
+            {
+                "steps": 2803,
+                "file_path": "results\\my_training03\\ML Agent Controller\\ML Agent Controller-2803.onnx",
+                "reward": -1.2716410706440608,
+                "creation_time": 1742601347.2890491,
+                "auxillary_file_paths": [
+                    "results\\my_training03\\ML Agent Controller\\ML Agent Controller-2803.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2803,
+            "file_path": "results\\my_training03\\ML Agent Controller.onnx",
+            "reward": -1.2716410706440608,
+            "creation_time": 1742601347.2890491,
+            "auxillary_file_paths": [
+                "results\\my_training03\\ML Agent Controller\\ML Agent Controller-2803.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "2.5.1+cpu"
+    }
+}

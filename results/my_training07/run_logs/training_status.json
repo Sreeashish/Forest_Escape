@@ -1,0 +1,47 @@
+{
+    "MLAgentController": {
+        "checkpoints": [
+            {
+                "steps": 3192,
+                "file_path": "results\\my_training07\\MLAgentController\\MLAgentController-3192.onnx",
+                "reward": 13.755582511425018,
+                "creation_time": 1742829857.2729993,
+                "auxillary_file_paths": [
+                    "results\\my_training07\\MLAgentController\\MLAgentController-3192.pt"
+                ]
+            },
+            {
+                "steps": 30448,
+                "file_path": "results\\my_training07\\MLAgentController\\MLAgentController-30448.onnx",
+                "reward": 1.8069981932640076,
+                "creation_time": 1742830357.6121137,
+                "auxillary_file_paths": [
+                    "results\\my_training07\\MLAgentController\\MLAgentController-30448.pt"
+                ]
+            },
+            {
+                "steps": 55408,
+                "file_path": "results\\my_training07\\MLAgentController\\MLAgentController-55408.onnx",
+                "reward": null,
+                "creation_time": 1742830880.827584,
+                "auxillary_file_paths": [
+                    "results\\my_training07\\MLAgentController\\MLAgentController-55408.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 55408,
+            "file_path": "results\\my_training07\\MLAgentController.onnx",
+            "reward": null,
+            "creation_time": 1742830880.827584,
+            "auxillary_file_paths": [
+                "results\\my_training07\\MLAgentController\\MLAgentController-55408.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "2.5.1+cpu"
+    }
+}

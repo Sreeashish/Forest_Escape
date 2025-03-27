@@ -3,7 +3,6 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class PlayerController : MonoBehaviour
 {
@@ -76,7 +75,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        PlayerMovement();
+        PlayerMovement(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         GroundCheck();
         CheckForInteractions();
         CombatActivations();
@@ -89,22 +88,18 @@ public class PlayerController : MonoBehaviour
     }
 
     #region PlayerMovement
-    void PlayerMovement()
+    public void PlayerMovement(float horizontal, float vertical)
     {
         if (isControllable)
         {
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
             Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
             if (direction.magnitude >= 0.1f)
             {
                 if (playerMode == PlayerMode.Exploring)
                 {
-                    float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-                    float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnVelocity, turnSmoothTime);
-                    transform.rotation = Quaternion.Euler(0f, angle, 0f);
-                    Vector3 moveDirection = Quaternion.Euler(0, targetAngle, 0f) * Vector3.forward;
+                    Vector3 moveDirection = HandleRotations(direction);
+
                     if (Input.GetKey(sprintButton))
                     {
                         player.Move(moveDirection.normalized * sprintSpeed * Time.deltaTime);
@@ -118,7 +113,7 @@ public class PlayerController : MonoBehaviour
                 }
 
 
-                else if(playerMode == PlayerMode.CombatReady)
+                else if (playerMode == PlayerMode.CombatReady)
                 {
                     if (Input.GetKey(sprintButton))
                     {
@@ -142,6 +137,15 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
+    }
+
+    Vector3 HandleRotations(Vector3 direction)
+    {
+        float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnVelocity, turnSmoothTime);
+        transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        Vector3 moveDirection = Quaternion.Euler(0, targetAngle, 0f) * Vector3.forward;
+        return moveDirection;
     }
 
     IEnumerator PlayerJump(Transform jumpToPos)
@@ -271,7 +275,7 @@ public class PlayerController : MonoBehaviour
                             {
                                 OnboardingController.instance.StartCoroutine(OnboardingController.instance.StartOnBoarding());
                             }
-                            StartCoroutine(ActivateInteraction(interactablesInCurrentLevel[i]));
+                            InitiateInteractions(interactablesInCurrentLevel[i]);
                         }
                     }
                 }
@@ -287,100 +291,114 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    IEnumerator ActivateInteraction(Interactable interactable)
+    public void InteractionFunction(Interactable interactable)
+    {
+        //Interactable inter = interactable.GetComponent<Interactable>();
+        //if (inter != null)
+            StartCoroutine(ActivateInteraction(interactable));
+        //else
+        //    Debug.LogError("No Inter");
+    }
+
+    void InitiateInteractions(Interactable interactable)
     {
         if (Input.GetKeyDown(interactionButton))
         {
-            interactable.DisplayMarker(false);
-            switch (interactable.interactionType)
+            StartCoroutine(ActivateInteraction(interactable));
+        }
+    }
+
+    IEnumerator ActivateInteraction(Interactable interactable)
+    {
+        interactable.DisplayMarker(false);
+        switch (interactable.interactionType)
+        {
+            case InteractionType.OpenPrison:
+                ToggleControlsOnorOff(false);
+                interactable.TurnInteraction(false);
+                transform.DORotate(interactable.transform.eulerAngles, 0.5f);
+                StartCoroutine(interactable.OpenPrisonDoor());
+                yield return StartCoroutine(cameraController.StartCinematic(interactable.lookAtObject, cameraCinematicPoint));
+                ToggleControlsOnorOff(true);
+                break;
+            case InteractionType.Jump:
+                interactable.TurnInteraction(false);
+                StartCoroutine(PlayerJump(interactable.interactionItem));
+                interactable.TurnInteraction(true);
+                interactable.DisplayMarker(true);
+                break;
+            case InteractionType.HealthChest:
+                ToggleControlsOnorOff(false);
+                interactable.TurnInteraction(false);
+                transform.DORotate(interactable.transform.eulerAngles, 0.5f);
+                StartCoroutine(interactable.OpenChest());
+                interactable.oneTimeInterationOver = true;
+                yield return StartCoroutine(cameraController.StartCinematic(interactable.lookAtObject, interactable.customCameraPoint));
+                ToggleControlsOnorOff(true);
+                break;
+        }
+    }
+        #endregion
+
+        #region Life
+
+        bool regenerationStarted; //boolean flag for below function only
+        void LifeRegeneration()
+        {
+            if (life <= 99 && !regenerationStarted)
             {
-                case Interactable.InteractionType.OpenPrison:
-                    ToggleControlsOnorOff(false);
-                    interactable.TurnInteraction(false);
-                    transform.DORotate(interactable.transform.eulerAngles, 0.5f);
-                    StartCoroutine(interactable.OpenPrisonDoor());
-                    yield return StartCoroutine(cameraController.StartCinematic(interactable.lookAtObject, cameraCinematicPoint));
-                    ToggleControlsOnorOff(true);
-                    break;
-                case Interactable.InteractionType.Jump:
-                    interactable.TurnInteraction(false);
-                    StartCoroutine(PlayerJump(interactable.interactionItem));
-                    interactable.TurnInteraction(true);
-                    interactable.DisplayMarker(true);
-                    break;
-                case Interactable.InteractionType.HealthChest:
-                    ToggleControlsOnorOff(false);
-                    interactable.TurnInteraction(false);
-                    transform.DORotate(interactable.transform.eulerAngles, 0.5f);
-                    StartCoroutine(interactable.OpenChest());
-                    interactable.oneTimeInterationOver = true;
-                    yield return StartCoroutine(cameraController.StartCinematic(interactable.lookAtObject, interactable.customCameraPoint));
-                    ToggleControlsOnorOff(true);
-                    break;
+                if (RegenerationRoutine != null)
+                {
+                    StopCoroutine(RegenerationRoutine);
+                }
+                RegenerationRoutine = StartCoroutine(LifeRegen());
             }
         }
-    }
-    #endregion
 
-    #region Life
-
-    bool regenerationStarted; //boolean flag for below function only
-    void LifeRegeneration()
-    {
-        if (life <= 99 && !regenerationStarted)
+        Coroutine RegenerationRoutine;
+        IEnumerator LifeRegen()
         {
-            if (RegenerationRoutine != null)
+            float currentLife;
+            regenerationStarted = true;
+            yield return CommonScript.GetDelay(regenerationStartTime);
+            while (life < maxLife)
             {
-                StopCoroutine(RegenerationRoutine);
+                yield return null;
+                currentLife = life;
+                life += 1;
+                life = Mathf.Clamp(life, 0, maxLife);
+                yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
+                yield return CommonScript.GetDelay(0.1f);
             }
-            RegenerationRoutine = StartCoroutine(LifeRegen());
+            regenerationStarted = false;
         }
-    }
 
-    Coroutine RegenerationRoutine;
-    IEnumerator LifeRegen()
-    {
-        float currentLife;
-        regenerationStarted = true;
-        yield return CommonScript.GetDelay(regenerationStartTime);
-        while (life < maxLife)
-        {
-            yield return null;
-            currentLife = life;
-            life += 1;
-            life = Mathf.Clamp(life, 0, maxLife);
-            yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
-            yield return CommonScript.GetDelay(0.1f);
-        }
-        regenerationStarted = false;
-    }
-
-    public IEnumerator GainLife(float value)
-    {
-        float currentLife = life;
-        life += value;
-        life = Mathf.Clamp(life, 0, maxLife);
-        sparks.Play();
-        yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
-    }
-
-    IEnumerator LifeDepletion(float damage)
-    {
-        yield return null;
-        if (life >= -0.1f)
+        public IEnumerator GainLife(float value)
         {
             float currentLife = life;
-            life -= damage;
+            life += value;
             life = Mathf.Clamp(life, 0, maxLife);
+            sparks.Play();
             yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
-            bloodParticle.Play();
-            playerAnimation.Play("Hit");
-            if (life <= 0)
+        }
+
+        IEnumerator LifeDepletion(float damage)
+        {
+            yield return null;
+            if (life >= -0.1f)
             {
-                StartCoroutine(Death());
+                float currentLife = life;
+                life -= damage;
+                life = Mathf.Clamp(life, 0, maxLife);
+                yield return UiController.instance.StartCoroutine(UiController.instance.FillFillbar(currentLife, life, true));
+                bloodParticle.Play();
+                playerAnimation.Play("Hit");
+                if (life <= 0)
+                {
+                    StartCoroutine(Death());
+                }
             }
         }
-    }
 
     public Coroutine DamageCoroutine;
     public IEnumerator GettingDamagePerSecond(float damage, bool continous = true)
