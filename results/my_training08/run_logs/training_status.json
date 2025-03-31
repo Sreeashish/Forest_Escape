@@ -2,58 +2,58 @@
     "MLAgentController": {
         "checkpoints": [
             {
-                "steps": 20151,
-                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-20151.onnx",
-                "reward": 16.65240755304694,
-                "creation_time": 1742938337.9165359,
-                "auxillary_file_paths": [
-                    "results\\my_training08\\MLAgentController\\MLAgentController-20151.pt"
-                ]
-            },
-            {
-                "steps": 21471,
-                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-21471.onnx",
-                "reward": 16.338044375181198,
-                "creation_time": 1742938480.0011148,
-                "auxillary_file_paths": [
-                    "results\\my_training08\\MLAgentController\\MLAgentController-21471.pt"
-                ]
-            },
-            {
-                "steps": 45791,
-                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-45791.onnx",
-                "reward": -7.47174983471632,
-                "creation_time": 1742938906.423618,
-                "auxillary_file_paths": [
-                    "results\\my_training08\\MLAgentController\\MLAgentController-45791.pt"
-                ]
-            },
-            {
-                "steps": 84196,
-                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-84196.onnx",
-                "reward": 44.46633259952068,
-                "creation_time": 1742940100.1098676,
-                "auxillary_file_paths": [
-                    "results\\my_training08\\MLAgentController\\MLAgentController-84196.pt"
-                ]
-            },
-            {
-                "steps": 91028,
-                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-91028.onnx",
+                "steps": 138147,
+                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-138147.onnx",
                 "reward": null,
-                "creation_time": 1742940236.2292027,
+                "creation_time": 1743167637.2558239,
                 "auxillary_file_paths": [
-                    "results\\my_training08\\MLAgentController\\MLAgentController-91028.pt"
+                    "results\\my_training08\\MLAgentController\\MLAgentController-138147.pt"
+                ]
+            },
+            {
+                "steps": 141165,
+                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-141165.onnx",
+                "reward": 30.81466567516327,
+                "creation_time": 1743167796.5253909,
+                "auxillary_file_paths": [
+                    "results\\my_training08\\MLAgentController\\MLAgentController-141165.pt"
+                ]
+            },
+            {
+                "steps": 148061,
+                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-148061.onnx",
+                "reward": null,
+                "creation_time": 1743168829.5410726,
+                "auxillary_file_paths": [
+                    "results\\my_training08\\MLAgentController\\MLAgentController-148061.pt"
+                ]
+            },
+            {
+                "steps": 159637,
+                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-159637.onnx",
+                "reward": 23.02158997952938,
+                "creation_time": 1743379869.9766524,
+                "auxillary_file_paths": [
+                    "results\\my_training08\\MLAgentController\\MLAgentController-159637.pt"
+                ]
+            },
+            {
+                "steps": 169584,
+                "file_path": "results\\my_training08\\MLAgentController\\MLAgentController-169584.onnx",
+                "reward": 10.816918358206749,
+                "creation_time": 1743380222.3918872,
+                "auxillary_file_paths": [
+                    "results\\my_training08\\MLAgentController\\MLAgentController-169584.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 91028,
+            "steps": 169584,
             "file_path": "results\\my_training08\\MLAgentController.onnx",
-            "reward": null,
-            "creation_time": 1742940236.2292027,
+            "reward": 10.816918358206749,
+            "creation_time": 1743380222.3918872,
             "auxillary_file_paths": [
-                "results\\my_training08\\MLAgentController\\MLAgentController-91028.pt"
+                "results\\my_training08\\MLAgentController\\MLAgentController-169584.pt"
             ]
         }
     },

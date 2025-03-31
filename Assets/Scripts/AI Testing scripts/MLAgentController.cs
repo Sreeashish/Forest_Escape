@@ -3,10 +3,12 @@ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
-using UnityEngine.Events;
-
+using System.IO;
+using System.Collections.Generic;
 public class MLAgentController : Agent
 {
+    #region Variables
+    [Header("Agent Attributes")]
     public Transform endPoint;
     public Transform[] waypoints;
     public Transform spawnPoint;
@@ -16,12 +18,18 @@ public class MLAgentController : Agent
     public float rotationSpeed = 360f;
     public float visionRange = 10f;
     public Rigidbody rigidBody;
+
+    [Header("Custom Attributes")]
+    public string pathFileName;
     public string interactableTag, interactableClassName, interactionFunctionName;
     public Type interactableClass;
 
+
+    private List<Vector3> pathPositions = new List<Vector3>();
     private int currentWaypointIndex = 0;
     private float previousDistanceToEnd;
     private Vector3 previousPosition;
+    #endregion
 
     void Start()
     {
@@ -32,6 +40,7 @@ public class MLAgentController : Agent
         previousPosition = transform.position;
     }
 
+    #region ML_Agent actions
     public override void OnEpisodeBegin()
     {
         transform.position = spawnPoint.position + Vector3.up * 0.1f;
@@ -44,6 +53,7 @@ public class MLAgentController : Agent
 
         currentWaypointIndex = 0;
         Debug.Log($"Episode Ended. Total Reward: {GetCumulativeReward()}");
+        pathPositions.Clear();
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -75,6 +85,7 @@ public class MLAgentController : Agent
         rigidBody.MovePosition(rigidBody.position + forwardMovement + sidewaysMovement);
 
         float distanceToTarget = Vector3.Distance(transform.localPosition, GetCurrentTarget().localPosition);
+        pathPositions.Add(transform.position);
 
         float distanceTraveled = Vector3.Distance(previousPosition, transform.position);
         AddReward(distanceTraveled * 0.001f);
@@ -97,12 +108,14 @@ public class MLAgentController : Agent
             {
                 AddReward(0.5f);
                 Debug.Log($"Waypoint {currentWaypointIndex + 1} reached!");
+                SavePathData();
                 currentWaypointIndex++;
             }
             else if (currentWaypointIndex == waypoints.Length)
             {
                 AddReward(1.0f);
                 Debug.Log("DESTINATION REACHED");
+                SavePathData();
                 EndEpisode();
             }
         }
@@ -113,6 +126,16 @@ public class MLAgentController : Agent
         }
     }
 
+    public override void Heuristic(in ActionBuffers actionsOut)
+    {
+        var continuousActions = actionsOut.ContinuousActions;
+        continuousActions[0] = Input.GetAxis("Vertical");
+        continuousActions[1] = Input.GetAxis("Horizontal");
+        continuousActions[2] = Input.GetKey(KeyCode.Space) ? 1f : 0f;
+    }
+    #endregion
+
+    #region Custom Actions
     private Transform GetCurrentTarget()
     {
         if (currentWaypointIndex < waypoints.Length)
@@ -126,7 +149,7 @@ public class MLAgentController : Agent
     {
         if (string.IsNullOrEmpty(interactableTag) || interactableClass == null)
         {
-            Debug.LogWarning("Interactable tag or class is not defined.");
+            Debug.LogError("Interactable tag or class is not defined.");
             return;
         }
 
@@ -135,7 +158,7 @@ public class MLAgentController : Agent
         foreach (GameObject obj in allInteractables)
         {
             float distanceToObj = Vector3.Distance(transform.position, obj.transform.position);
-            if (distanceToObj < 2f)
+            if (distanceToObj < 3f)
             {
                 Debug.Log("Interactable found: " + obj.name);
                 MonoBehaviour interactableCls = obj.GetComponent(interactableClass) as MonoBehaviour;
@@ -152,7 +175,7 @@ public class MLAgentController : Agent
     {
         if (interactable == null || string.IsNullOrEmpty(interactionFunctionName))
         {
-            Debug.LogWarning("Interaction failed: No valid method or function name.");
+            Debug.LogError("Interaction failed: No valid method or function name.");
             return;
         }
 
@@ -164,24 +187,39 @@ public class MLAgentController : Agent
         }
         else
         {
-            Debug.LogWarning($"Method '{interactionFunctionName}' not found on {interactable.name}");
+            Debug.LogError($"Method '{interactionFunctionName}' not found on {interactable.name}");
         }
     }
 
-    public override void Heuristic(in ActionBuffers actionsOut)
+    private void SavePathData()
     {
-        var continuousActions = actionsOut.ContinuousActions;
-        continuousActions[0] = Input.GetAxis("Vertical");
-        continuousActions[1] = Input.GetAxis("Horizontal");
-        continuousActions[2] = Input.GetKey(KeyCode.Space) ? 1f : 0f;
+        string filePath = Path.Combine(Application.dataPath, pathFileName.Replace("Assets/", "")).Replace("\\", "/");
+
+        if (!File.Exists(filePath))
+        {
+            Debug.LogError($"CSV file not found: {filePath}");
+            return;
+        }
+
+        using (StreamWriter pathWriter = new StreamWriter(filePath, true))
+        {
+            for (int i = 0; i < pathPositions.Count; i++)
+            {
+                Vector3 position = pathPositions[i];
+                string line = $"{Academy.Instance.EpisodeCount},{position.x},{position.y},{position.z}";
+                pathWriter.WriteLine(line);
+            }
+        }
+        Debug.Log($"Path data appended to {filePath}");
     }
+    #endregion
 
     void OnCollisionEnter(Collision collision)
     {
         if (((1 << collision.gameObject.layer) & obstacleMask) != 0)
         {
             AddReward(-0.5f);
-            Debug.Log("Hit an obstacle! Stronger penalty applied.");
+            Debug.LogWarning("Hit an obstacle! Stronger penalty applied.");
         }
     }
 

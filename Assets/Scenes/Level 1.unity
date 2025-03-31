@@ -291,7 +291,7 @@ MonoBehaviour:
   destinations:
   - destinationPoint: {fileID: 1323617899}
     passed: 0
-  - destinationPoint: {fileID: 201101380}
+  - destinationPoint: {fileID: 0}
     passed: 0
   interactionFunction:
     m_PersistentCalls:
@@ -313,7 +313,7 @@ MonoBehaviour:
         m_MethodName: InteractionFunction
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 201101380}
+          m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: Interactable, Assembly-CSharp
           m_IntArgument: 0
           m_FloatArgument: 0
@@ -5438,7 +5438,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 201101379}
-  - component: {fileID: 201101380}
   m_Layer: 0
   m_Name: Bridge Jump 1
   m_TagString: Interactable
@@ -5461,32 +5460,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 704056506}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!114 &201101380
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 201101378}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ec2100e18f455a45b992c513158cbfe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  interactionType: 0
-  isInteractable: 0
-  oneTimeInterationOver: 0
-  interactionItem: {fileID: 1150076800}
-  lookAtObject: {fileID: 0}
-  customCameraPoint: {fileID: 0}
-  interactionSound: {fileID: 0}
-  interactionLight: {fileID: 0}
-  interactionParticle: {fileID: 0}
-  preInteractedParticle: {fileID: 0}
-  marker: {fileID: 0}
-  markerCanvas: {fileID: 0}
-  interactionMarker: {fileID: 0}
-  lifeInChest: 0
 --- !u!1 &289249319
 GameObject:
   m_ObjectHideFlags: 0
@@ -21251,7 +21224,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1103215065
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21267,8 +21240,8 @@ MonoBehaviour:
   level: 0
   interactables:
   - {fileID: 1323617899}
-  - {fileID: 201101380}
-  - {fileID: 1150076801}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 289249321}
   - {fileID: 2078447968}
   water: {fileID: 6889704020789444407}
@@ -21301,7 +21274,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1150076800}
-  - component: {fileID: 1150076801}
   m_Layer: 0
   m_Name: Bridge Jump 2
   m_TagString: Interactable
@@ -21324,32 +21296,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 704056506}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1150076801
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1150076799}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ec2100e18f455a45b992c513158cbfe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  interactionType: 0
-  isInteractable: 0
-  oneTimeInterationOver: 0
-  interactionItem: {fileID: 201101379}
-  lookAtObject: {fileID: 0}
-  customCameraPoint: {fileID: 0}
-  interactionSound: {fileID: 0}
-  interactionLight: {fileID: 0}
-  interactionParticle: {fileID: 0}
-  preInteractedParticle: {fileID: 0}
-  marker: {fileID: 0}
-  markerCanvas: {fileID: 0}
-  interactionMarker: {fileID: 0}
-  lifeInChest: 0
 --- !u!1 &1189885836
 GameObject:
   m_ObjectHideFlags: 0
@@ -21674,7 +21620,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1292720675
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21709,6 +21655,7 @@ MonoBehaviour:
   rotationSpeed: 360
   visionRange: 4.5
   rigidBody: {fileID: 1292720677}
+  pathFileName: Assets/PathData/path_data.csv
   interactableTag: Interactable
   interactableClassName: TestInteractions
   interactionFunctionName: PerformInteraction
@@ -22080,8 +22027,8 @@ Transform:
   m_GameObject: {fileID: 1327539301}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.52, y: -0.0415, z: 5.2648}
-  m_LocalScale: {x: 1, y: 0.8169, z: 6.765303}
+  m_LocalPosition: {x: -9.292, y: -0.0415, z: 5.2648}
+  m_LocalScale: {x: 2.8366613, y: 0.8169, z: 6.765303}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -27631,6 +27578,10 @@ PrefabInstance:
     - target: {fileID: 3122137345130845195, guid: f667d97e953322b4ebe6b2ad9ebbe032, type: 3}
       propertyPath: m_Name
       value: UI Controller
+      objectReference: {fileID: 0}
+    - target: {fileID: 3122137345130845195, guid: f667d97e953322b4ebe6b2ad9ebbe032, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3548534446310240491, guid: f667d97e953322b4ebe6b2ad9ebbe032, type: 3}
       propertyPath: m_AnchorMax.y
@@ -33351,6 +33302,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy (Mushroom)
       objectReference: {fileID: 0}
+    - target: {fileID: 7402836676857252222, guid: 6078f99be3f3faf44b8577b7527c4803, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8340397277726416359, guid: 6078f99be3f3faf44b8577b7527c4803, type: 3}
       propertyPath: m_LocalPosition.x
       value: 9.7
@@ -33568,7 +33523,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2154899212270728499, guid: f523d117b5bd8b6488bb73e3a1a4416f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2218493077990534688, guid: f523d117b5bd8b6488bb73e3a1a4416f, type: 3}
       propertyPath: m_Layer
